@@ -25,7 +25,7 @@
 @font-face{font-family:"Unb Fallback";src:local("Arial"),local("Helvetica Neue"),local("Roboto");size-adjust:122%;ascent-override:88%;descent-override:22%}
 :root{color-scheme:dark;--bg:#070707;--ink:#ece9e4;--mute:#8d8983;--soft:#bdb8b1;--disp:Unbounded,"Unb Fallback",system-ui,sans-serif;--sans:'DM Sans',system-ui,sans-serif;
   --padX:max(clamp(22px,4vw,72px),env(safe-area-inset-left),env(safe-area-inset-right));--padT:max(clamp(58px,10dvh,92px),calc(env(safe-area-inset-top) + 50px));--padB:max(clamp(40px,7dvh,64px),calc(env(safe-area-inset-bottom) + 34px));
-  --ch:min(54dvh,560px)}
+  --x:0}
 *{box-sizing:border-box;min-width:0;min-height:0}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;height:100dvh;background:var(--bg);color:var(--ink);overflow:hidden}
@@ -91,18 +91,26 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
 .tr.on .bar{display:block}
 .tr.off{opacity:.72;cursor:default}
 
-/* 3 — works: one unbroken run, posters focus as they cross the centre */
-.d-works{display:flex;flex-direction:column;justify-content:space-between;padding-right:clamp(40px,7vw,120px);overflow:visible}
-.d-works .head{position:sticky;left:var(--padX);align-self:flex-start;display:flex;align-items:baseline;gap:18px}
-.d-works .head .big{font-size:min(5.4vw,12dvh);white-space:nowrap}
-.row{display:flex;gap:clamp(14px,1.8vw,28px);align-items:flex-end}
-.cv{position:relative;flex:none;height:var(--ch);aspect-ratio:2/3;border-radius:22px;overflow:hidden;background:#141312;display:flex;flex-direction:column;justify-content:space-between;padding:clamp(12px,1.2vw,18px);transform-origin:50% 100%;transform:scale(calc(.88 + .12*var(--f,1)));opacity:calc(.62 + .38*var(--f,1));will-change:transform,opacity}
-.cv .bg,.cv>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background-size:cover}
-.cv::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(0deg,rgba(7,7,7,.7),rgba(7,7,7,0) 60%)}
-.cv .k{position:relative;z-index:2;display:flex;justify-content:space-between;font:300 9px var(--disp);letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+/* 3 — works: one page, four shelves */
+.d-works{width:min(100vw,1500px);display:flex;flex-direction:column;gap:clamp(14px,3dvh,30px)}
+.d-works .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px 40px;flex-wrap:wrap}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button{font:300 9.5px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);background:none;border:1px solid #2a2826;border-radius:999px;padding:11px 16px;cursor:pointer;transition:color .3s,background .3s,border-color .3s;white-space:nowrap}
+.tabs button sup{font-size:.8em;margin-left:6px;opacity:.7}
+.tabs button:hover{color:var(--ink);border-color:#4a4744}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.shelf{flex:1;display:flex;align-items:flex-end}
+.grid{display:grid;grid-template-columns:repeat(var(--c,4),var(--w,200px));gap:var(--g,18px);transition:opacity .25s}
+.grid.out{opacity:0}
+.cv{position:relative;width:var(--w,200px);height:calc(var(--w,200px)*1.5);border-radius:clamp(12px,calc(var(--w,200px)*.09),24px);overflow:hidden;background:#141312;display:flex;flex-direction:column;justify-content:space-between;padding:clamp(8px,calc(var(--w,200px)*.075),20px)}
+.cv .bg,.cv>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background-size:cover;transition:transform 1.2s cubic-bezier(.2,.7,.1,1)}
+.cv:hover .bg,.cv:hover>img{transform:scale(1.06)}
+.cv::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(0deg,rgba(7,7,7,.75),rgba(7,7,7,0) 62%)}
+.cv .k{position:relative;z-index:2;display:flex;justify-content:space-between;font:300 clamp(7px,calc(var(--w,200px)*.045),9.5px) var(--disp);letter-spacing:.14em;text-transform:uppercase;opacity:.8}
 .cv .b{position:relative;z-index:2}
-.cv h3{margin:0;font:300 clamp(13px,1.2vw,20px)/1.12 var(--disp);letter-spacing:-.01em}
-.cv p{margin:6px 0 0;font:400 12px/1.4 var(--sans);opacity:.8}
+.cv h3{margin:0;font:300 clamp(9.5px,calc(var(--w,200px)*.075),22px)/1.14 var(--disp);letter-spacing:-.01em}
+.cv p{margin:6px 0 0;font:400 clamp(10px,calc(var(--w,200px)*.055),13px)/1.4 var(--sans);opacity:.8}
+.grid.tiny .cv p,.grid.tiny .cv .k span:last-child{display:none}
 
 /* 4 — about */
 .d-about{width:min(100vw,1320px);display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(28px,5vw,96px);align-items:end}
@@ -140,6 +148,7 @@ input:focus,textarea:focus{border-color:#4a4744}
   .pl{grid-template-rows:repeat(4,minmax(0,1fr));grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);column-gap:10px;align-self:stretch;height:100%}
   .tr .t{font-size:14px}.tr .t small{font-size:11.5px}
   .d-listen .ph{display:none}
+  .d-works .head{flex-wrap:nowrap}
   .d-about h2,.d-about p:last-child{display:none}
   form{grid-template-columns:1fr 1fr;max-width:none}
   form label:nth-of-type(3),.foot,.note{grid-column:1/-1}
@@ -149,8 +158,7 @@ input:focus,textarea:focus{border-color:#4a4744}
 
 /* phones and upright tablets: one page per swipe, nothing scrolls down */
 @media (max-width:760px),(max-width:1024px) and (orientation:portrait){
-  :root{--cw:min(76vw,47dvh,420px);--ch:calc(var(--cw)*1.5)}
-  #track{scroll-snap-type:x mandatory;cursor:auto}
+    #track{scroll-snap-type:x mandatory;cursor:auto}
   .d-hero,.d-listen,.d-about,.d-contact{width:100vw;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;align-items:stretch;gap:18px}
   .big{font-size:min(11vw,64px)}
   .d-hero .ph img{position:static;width:100%;height:100%;aspect-ratio:auto;object-position:38% 40%}
@@ -163,14 +171,11 @@ input:focus,textarea:focus{border-color:#4a4744}
   .tr .t{font-size:15.5px}
   .tr button{width:40px;height:40px}
   .tr .bar{left:64px;right:16px}
-  .d-works{padding-inline:calc((100vw - var(--cw))/2);padding-right:0;justify-content:flex-start;gap:0}
-  .row{margin-block:auto}
-  .d-works:last-of-type,.d-works.last{padding-right:calc((100vw - var(--cw))/2)}
-  .d-works .head{margin-left:calc(var(--padX) - (100vw - var(--cw))/2)}
-  .d-works .head .big{font-size:min(11vw,64px)}
-  .row{gap:14px}
-  .cv{width:var(--cw);height:var(--ch);scroll-snap-align:center;padding:16px}
-  .cv h3{font-size:clamp(14px,4.4vw,22px)}
+  .d-works{width:100vw;scroll-snap-align:start;scroll-snap-stop:always;gap:16px}
+  .d-works .head{display:grid;gap:14px}
+  .tabs{gap:6px}
+  .tabs button{padding:10px 12px;font-size:9px}
+  .shelf{align-items:center;justify-content:center}
   .d-about .ph{flex:1;height:auto;aspect-ratio:auto;align-self:stretch;max-width:none}
   .d-about .ph img{object-position:50% 22%}
   .d-about h2{font-size:min(6.4vw,34px)}
@@ -205,10 +210,10 @@ input:focus,textarea:focus{border-color:#4a4744}
     <div class="pl" id="pl"></div>
   </section>
 
-  <section class="door d-works" data-set="film"><div class="head"><h2 class="big">Film</h2><span class="cap"></span></div><div class="row"></div></section>
-  <section class="door d-works" data-set="tv"><div class="head"><h2 class="big">Series &amp; Docs</h2><span class="cap"></span></div><div class="row"></div></section>
-  <section class="door d-works" data-set="stage"><div class="head"><h2 class="big">Stage</h2><span class="cap"></span></div><div class="row"></div></section>
-  <section class="door d-works last" data-set="shorts"><div class="head"><h2 class="big">Shorts</h2><span class="cap"></span></div><div class="row"></div></section>
+  <section class="door d-works" id="works">
+    <div class="head"><h2 class="big">Works</h2><div class="tabs" id="tabs" role="tablist"></div></div>
+    <div class="shelf" id="shelf"><div class="grid" id="grid"></div></div>
+  </section>
 
   <section class="door d-about" id="about">
     <div class="ph"><img src="img/about.jpg" alt="Francesco at the desk, eyes lowered, warm lamp light" loading="lazy" decoding="async"></div>
@@ -278,19 +283,25 @@ au.addEventListener('timeupdate',()=>{const r=rowOf(curId);if(r&&au.duration)r.q
 np.addEventListener('click',()=>au.pause());
 
 // ---------- works ----------
-const KIND={film:'Film',tv:'Series',stage:'Stage',shorts:'Short'};
-document.querySelectorAll('.d-works').forEach(sec=>{const set=sec.dataset.set,list=WORKS[set];
-  sec.querySelector('.head .cap').textContent=String(list.length).padStart(2,'0');
-  sec.querySelector('.row').innerHTML=list.map(([t,y,by,role])=>{const p=POSTERS[t];return `<article class="cv">${p?`<img src="posters/${esc(p)}" alt="${esc(t)}" loading="lazy" decoding="async">`:`<i class="bg" style="background-image:url(img/c${hash(t)%12}.jpg)"></i>`}<div class="k"><span>${y}</span><span>${KIND[set]}</span></div><div class="b"><h3>${esc(t)}</h3><p>${by?esc(by)+' · ':''}${esc(role)}</p></div></article>`}).join('')});
-const cards=[...document.querySelectorAll('.cv')];
+const KIND={film:'Film',tv:'Series',stage:'Stage',shorts:'Short'},TAB={film:'Film',tv:'Series & Docs',stage:'Stage',shorts:'Shorts'};
+const tabs=document.getElementById('tabs'),grid=document.getElementById('grid'),shelf=document.getElementById('shelf');
+let curSet='film';
+tabs.innerHTML=Object.keys(WORKS).map(k=>`<button type="button" role="tab" data-set="${k}" aria-selected="${k===curSet}">${esc(TAB[k])}<sup>${WORKS[k].length}</sup></button>`).join('');
+function fit(){const n=WORKS[curSet].length,W=shelf.clientWidth,H=shelf.clientHeight;if(!W||!H)return;let best=null;
+  for(let c=1;c<=n;c++){const r=Math.ceil(n/c),g=Math.max(8,Math.min(22,W/c*.08));const w=Math.min((W-g*(c-1))/c,(H-g*(r-1))/r/1.5,pageQ.matches?260:340);if(!best||w>best.w+.5)best={c,w,g}}
+  grid.style.setProperty('--c',best.c);grid.style.setProperty('--w',Math.floor(best.w)+'px');grid.style.setProperty('--g',Math.round(best.g)+'px');grid.classList.toggle('tiny',best.w<125)}
+function show(set,instant){curSet=set;tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.set===set)));
+  const fill=()=>{grid.innerHTML=WORKS[set].map(([t,y,by,role])=>{const p=POSTERS[t];return `<article class="cv">${p?`<img src="posters/${esc(p)}" alt="${esc(t)}" loading="lazy" decoding="async">`:`<i class="bg" style="background-image:url(img/c${hash(t)%12}.jpg)"></i>`}<div class="k"><span>${y}</span><span>${KIND[set]}</span></div><div class="b"><h3>${esc(t)}</h3><p>${by?esc(by)+' · ':''}${esc(role)}</p></div></article>`}).join('');fit();grid.classList.remove('out')};
+  if(instant||still.matches){fill();return}grid.classList.add('out');setTimeout(fill,220)}
+tabs.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.dataset.set!==curSet)show(b.dataset.set)});
+show('film',true);new ResizeObserver(fit).observe(shelf);
 
 // ---------- the track ----------
 const track=document.getElementById('track'),doors=[...track.querySelectorAll('.door')],prog=document.getElementById('prog');
 const maxX=()=>Math.max(1,track.scrollWidth-track.clientWidth);
 let target=0,anim=0,queued=false;
-function paint(){queued=false;const W=innerWidth,mid=W/2,x=track.scrollLeft;prog.style.transform=`scaleX(${Math.max(0,Math.min(1,x/maxX()))})`;
-  const reach=pageQ.matches?W*.75:W*.62;
-  for(const c of cards){const r=c.getBoundingClientRect();if(r.right<-200||r.left>W+200)continue;const f=Math.max(0,1-Math.abs(r.left+r.width/2-mid)/reach);c.style.setProperty('--f',(pageQ.matches?f*f:Math.min(1,f*2.2)).toFixed(3))}}
+function paint(){queued=false;const x=track.scrollLeft;prog.style.transform=`scaleX(${Math.max(0,Math.min(1,x/maxX()))})`;
+}
 const kick=()=>{if(!queued){queued=true;requestAnimationFrame(paint)}};
 track.addEventListener('scroll',kick,{passive:true});
 function step(){const c=track.scrollLeft,d=target-c;if(Math.abs(d)<.5){track.scrollLeft=target;anim=0;return}track.scrollLeft=c+d*.1;anim=requestAnimationFrame(step)}
