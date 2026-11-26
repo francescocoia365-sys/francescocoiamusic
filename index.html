@@ -7,10 +7,18 @@
 <meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="canonical" href="https://francescocoiamusic.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://francescocoiamusic.com/">
+<meta property="og:image" content="https://francescocoiamusic.com/img/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta property="og:title" content="Francesco Coia — Composer">
 <meta property="og:description" content="Music for film, television, theatre and contemporary dance.">
 <title>Francesco Coia — Composer</title>
-<meta name="description" content="Francesco Coia, composer, arranger and orchestrator based in Rome. Film, television, theatre, dance.">
+<meta name="description" content="Francesco Coia is a composer, arranger and orchestrator based in Rome, writing music for film, television, theatre and contemporary dance. Listen to the reel and see the credits.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Francesco Coia","jobTitle":"Composer","url":"https://francescocoiamusic.com/","image":"https://francescocoiamusic.com/img/share.jpg","address":{"@type":"PostalAddress","addressLocality":"Rome","addressCountry":"IT"},"sameAs":["https://www.imdb.com/name/nm15832216/"]}</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='16' fill='%23070707'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23ece9e4'/%3E%3C/svg%3E">
 <link rel="preload" as="image" href="img/hero.jpg" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,8 +43,6 @@ img{color:transparent;display:block}
 ::selection{background:var(--ink);color:var(--bg)}
 :focus-visible{outline:1.5px solid var(--ink);outline-offset:3px}
 body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.5;background:url(img/grain.png) 0 0/96px 96px}
-@media (hover:hover) and (prefers-reduced-motion:no-preference){body::after{inset:-96px;animation:grain .9s steps(5) infinite}}
-@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-31px,17px)}50%{transform:translate(23px,-41px)}75%{transform:translate(-13px,-29px)}100%{transform:translate(37px,11px)}}
 
 .cap{font:300 9.5px var(--disp);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin:0}
 .big{font:200 min(7.2vw,15dvh)/.95 var(--disp);letter-spacing:-.025em;text-transform:uppercase;margin:0}
@@ -45,14 +51,19 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
 
 .top{position:fixed;inset:0 0 auto;z-index:10;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:max(24px,calc(env(safe-area-inset-top) + 10px)) var(--padX) 26px;pointer-events:none;background:linear-gradient(180deg,rgba(7,7,7,.75),rgba(7,7,7,0))}
 .mark{font:400 11px var(--disp);letter-spacing:.28em;text-transform:uppercase;text-decoration:none;pointer-events:auto;white-space:nowrap}
-.np{pointer-events:auto;display:none;align-items:center;gap:10px;max-width:56vw;background:none;border:1px solid #3a3835;border-radius:999px;color:var(--ink);font:300 9.5px var(--disp);letter-spacing:.12em;text-transform:uppercase;padding:8px 14px;cursor:pointer}
+.np{pointer-events:auto;display:none;align-items:center;gap:10px;max-width:38vw;background:none;border:1px solid #3a3835;border-radius:999px;color:var(--ink);font:300 9.5px var(--disp);letter-spacing:.12em;text-transform:uppercase;padding:8px 14px;cursor:pointer}
 .np.on{display:inline-flex}
+.right{display:flex;align-items:center;gap:14px;pointer-events:none}
+.go{pointer-events:auto;font:300 9.5px var(--disp);letter-spacing:.16em;text-transform:uppercase;text-decoration:none;color:var(--ink);padding:10px 0;white-space:nowrap;border-bottom:1px solid transparent;transition:border-color .3s}
+.go:hover{border-color:var(--ink)}
 .np span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .np svg{flex:none;width:9px;height:9px}
 
 /* the one indicator: a white line that fills */
-.prog{position:fixed;z-index:10;left:var(--padX);right:var(--padX);bottom:max(20px,calc(env(safe-area-inset-bottom) + 10px));height:1.5px;background:rgba(236,233,228,.16);border-radius:2px;overflow:hidden;pointer-events:none}
-.prog i{display:block;height:100%;background:var(--ink);transform-origin:left;transform:scaleX(0)}
+.prog{position:fixed;z-index:10;left:var(--padX);right:var(--padX);bottom:max(8px,calc(env(safe-area-inset-bottom) - 2px));height:26px;cursor:pointer;touch-action:none}
+.prog::before,.prog i{content:"";position:absolute;left:0;right:0;top:12px;height:1.5px;border-radius:2px}
+.prog::before{background:rgba(236,233,228,.16)}
+.prog i{display:block;background:var(--ink);transform-origin:left;transform:scaleX(0)}
 
 #track{position:fixed;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior:contain;cursor:grab;user-select:none;-webkit-user-select:none}
 #track::-webkit-scrollbar{display:none}
@@ -68,6 +79,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
 .d-hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(7,7,7,.8) 0,rgba(7,7,7,.35) 28%,rgba(7,7,7,0) 48%),linear-gradient(0deg,rgba(7,7,7,.6) 0,rgba(7,7,7,0) 30%)}
 .d-hero .txt{position:absolute;z-index:2;left:var(--padX);bottom:calc(var(--padB) + 6px);display:grid;gap:16px}
 .d-hero .big{font-size:min(4vw,9dvh);white-space:nowrap}
+
+.nudge{position:absolute;z-index:2;right:var(--padX);bottom:calc(var(--padB) + 6px);width:52px;height:52px;border:1px solid rgba(236,233,228,.55);border-radius:50%;display:grid;place-items:center;transition:opacity .6s}
+.nudge.gone{opacity:0}
+@media (prefers-reduced-motion:no-preference){.nudge svg{animation:nudge 2.2s ease-in-out infinite}}
+@keyframes nudge{0%,100%{transform:translateX(-3px)}50%{transform:translateX(4px)}}
 
 /* 2 — listen */
 .d-listen{width:min(100vw,1560px);display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(28px,5vw,96px)}
@@ -145,6 +161,8 @@ input:focus,textarea:focus{border-color:#4a4744}
 .send:hover span,.send:focus-visible span{background:var(--ink);color:var(--bg)}
 .mailline{margin:0;font-size:13.5px;color:var(--mute);user-select:text;-webkit-user-select:text;cursor:auto}
 .mailline a{color:var(--ink);text-decoration:none;border-bottom:1px solid #4a4744}
+.copy{font:300 9px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);background:none;border:1px solid #3a3835;border-radius:999px;padding:6px 10px;margin-left:8px;cursor:pointer}
+.copy:hover{color:var(--ink)}
 .note{margin:0;font-size:13px;color:var(--mute)}
 .note:empty{display:none}
 
@@ -211,7 +229,7 @@ input:focus,textarea:focus{border-color:#4a4744}
   .d-about p{font-size:clamp(13px,1.75dvh,16px);line-height:1.55;max-width:none}
   .d-contact{justify-content:space-between}
   form{max-width:none}
-  .np{max-width:46vw}
+  .np{max-width:30vw;padding:8px 11px}
 }
 @media (max-width:760px){.d-about p:last-child{display:none}}
 @media (max-width:760px) and (max-height:700px){.tr .t small{display:none}}
@@ -221,7 +239,7 @@ input:focus,textarea:focus{border-color:#4a4744}
 <body>
 <header class="top">
   <a class="mark" href="#open" id="home">Francesco Coia</a>
-  <button class="np" id="np" type="button" aria-label="Pause"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1h2v8H2zM6 1h2v8H6z" fill="currentColor"/></svg><span id="np-t"></span></button>
+  <span class="right"><button class="np" id="np" type="button" aria-label="Pause"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1h2v8H2zM6 1h2v8H6z" fill="currentColor"/></svg><span id="np-t"></span></button><a class="go" href="#contact" id="go-contact">Contact</a></span>
 </header>
 
 <main id="track" tabindex="0" aria-label="Francesco Coia — drag, scroll or swipe sideways">
@@ -231,6 +249,7 @@ input:focus,textarea:focus{border-color:#4a4744}
       <p class="cap">Composer · Arranger · Orchestrator</p>
       <h1 class="big">Francesco<br>Coia</h1>
     </div>
+    <span class="nudge" id="nudge" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 16 16"><path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1"/></svg></span>
   </section>
 
   <section class="door d-listen" id="listen">
@@ -274,14 +293,14 @@ input:focus,textarea:focus{border-color:#4a4744}
       <label><span class="cap">Message</span><textarea id="f-msg" name="message" required></textarea></label>
       <div class="foot">
         <button class="send" type="submit"><span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></span>Send</button>
-        <p class="mailline">or <a href="mailto:francescocoia365@gmail.com">francescocoia365@gmail.com</a></p>
+        <p class="mailline">or <a href="mailto:francescocoia365@gmail.com">francescocoia365@gmail.com</a> <button type="button" class="copy" id="copy">Copy</button></p>
       </div>
       <p class="note" id="note" aria-live="polite"></p>
     </form>
   </section>
 </main>
 
-<div class="prog" aria-hidden="true"><i id="prog"></i></div>
+<div class="prog" id="progbar" aria-hidden="true"><i id="prog"></i></div>
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Video"><button type="button" id="lb-x">Close</button><div class="fr" id="lb-fr"></div></div>
 <div class="cur" id="cur" aria-hidden="true">Drag</div>
 <audio id="au" preload="none"></audio>
@@ -289,7 +308,7 @@ input:focus,textarea:focus{border-color:#4a4744}
 <script>
 {
 const AUDIO={"t01": "t01.mp3", "t02": "t02.mp3", "t03": "t03.mp3", "t04": "t04.mp3", "t05": "t05.mp3", "t06": "t06.mp3", "t07": "t07.mp3", "t08": "t08.mp3", "t09": "t09.mp3", "t10": "t10.mp3", "t11": "t11.mp3", "t12": "t12.mp3"};   // track id -> file in audio/
-const TRACKS=[["t01", "A Home That No Longer Remembers Us", "2:47", "In development"], ["t02", "The Weight of an Invisible Shadow", "4:22", "LeO"], ["t03", "Bodies Out of Focus", "2:56", "LeO"], ["t04", "Bella ci dormi", "2:40", "Jusqu’au prochain souffle"], ["t05", "Breath Out", "2:22", "Façade"], ["t06", "Everything Returns, Slightly Changed", "4:14", "LeO · with Andrea Pagliara"], ["t07", "What Remains Between Us", "4:37", "LeO · with Andrea Pagliara"], ["t08", "Echoes of the True Self", "1:59", "Murdrum"], ["t09", "p e r d e r e", "2:29", "Birthday"], ["t10", "On The Ring", "3:00", "Nino Benvenuti · with Andrea Pagliara"], ["t11", "Alfredo", "1:30", "Alfredo · with Andrea Pagliara"], ["t12", "Vicini Vicini", "1:11", "Sicilia Express · theme by Paolo Buonvino, arr."]];
+const TRACKS=[["t01", "A Home That No Longer Remembers Us", "2:47", "In development"], ["t02", "The Weight of an Invisible Shadow", "4:22", "Luce e Ombra"], ["t03", "Bodies Out of Focus", "2:56", "Luce e Ombra"], ["t04", "Bella ci dormi", "2:40", "Jusqu’au prochain souffle"], ["t05", "Breath Out", "2:22", "Façade"], ["t06", "Everything Returns, Slightly Changed", "4:14", "Luce e Ombra · with Andrea Pagliara"], ["t07", "What Remains Between Us", "4:37", "Luce e Ombra · with Andrea Pagliara"], ["t08", "Echoes of the True Self", "1:59", "Murdrum"], ["t09", "p e r d e r e", "2:29", "Birthday"], ["t10", "On The Ring", "3:00", "Nino Benvenuti · with Andrea Pagliara"], ["t11", "Alfredo", "1:30", "Alfredo · with Andrea Pagliara"], ["t12", "Vicini Vicini", "1:11", "Sicilia Express · theme by Paolo Buonvino, arr."]];
 const WORKS=[["2026", [["Le Cose Non Dette", "Film", "Gabriele Muccino", "Electronic programming, assistant to composer", "le-cose-non-dette.jpg", 0.667], ["Dio Ride", "Film", "Giovanni Veronesi", "Electronic programming, assistant to composer", "dio-ride.jpg", 0.667], ["Bare", "Film", "Lorna Tucker", "Electronic programming, assistant to composer", "bare.jpg", 0.667], ["Starmaker", "Film", "Joshua David Pivato", "Composer", "starmaker.jpg", 0.667], ["Luce e Ombra", "Dance", "Accademia Nazionale di Danza", "Composer", "luce-e-ombra.jpg", 0.667], ["Frida", "Opera musical", "", "Arranger, orchestrator", "frida.jpg", 0.667], ["Rat Poison", "Short", "Mina Kaya", "Composer", "rat-poison.jpg", 0.667]]], ["2025", [["Sicilia Express", "Series", "Netflix", "Arranger, electronic programming, assistant to composer", "sicilia-express.jpg", 0.667], ["Nino Benvenuti", "Documentary", "Rai Storia", "Additional music, guitars", "nino-benvenuti.jpg", 0.667], ["Van Gogh Café", "Opera musical", "", "Arranger, orchestrator", "van-gogh-cafe.jpg", 0.667], ["Alfredo", "Short", "Sveva Salimene", "Composer", "alfredo.jpg", 0.667], ["Murdrum", "Short", "Job Gailey", "Composer", "murdrum.jpg", 0.667], ["Jusqu’au prochain souffle", "Short", "", "Composer", "jusqu-au-prochain-souffle.jpg", 0.667]]], ["2024", [["Il Vajont di Tutti", "Opera musical", "", "Arranger, orchestrator", "il-vajont-di-tutti.jpg", 0.667], ["Cicatrix", "Short", "U. Güven, T. D. Ipek, D. S. Bilgiç", "Composer", "cicatrix.jpg", 0.667], ["The Chitin Hunter", "Short", "Pratham Mudbidri", "Composer", "the-chitin-hunter.jpg", 0.667]]], ["2023", [["Maintenance", "Short", "Pablo Aguilar", "Composer", "maintenance.jpg", 0.667], ["Birthday", "Short", "Imogen Walker", "Composer", "birthday.jpg", 0.667], ["Façade", "Short", "Pratham Mudbidri", "Composer", "facade.jpg", 0.667], ["Bête Noir", "Short", "Jeremy Brondoni", "Composer", "bete-noir.jpg", 0.667], ["Contractors", "Short", "Michael Payne", "Composer", "contractors.jpg", 0.667]]], ["2022", [["Burn To Be Reborn", "Short", "Irene Loreti, Carla Mariani", "Composer", "burn-to-be-reborn.jpg", 0.667]]]];
 const VIDEOS=[["ab0v_lUS5qM", "Tape Explorations"], ["puJDctlBKIg", "Speculative Memories"], ["xh6746JX6b8", "FUGUE/TRAMPOLINE"], ["PxWVAe1Pt_Q", "A Night Odyssey (Making Of)"]];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -347,6 +366,12 @@ let keep=[0,0],lastRs=0;
 track.addEventListener('scroll',()=>{if(performance.now()-lastRs<400)return;const x=track.scrollLeft+1;let i=0;doors.forEach((d,k)=>{if(d.offsetLeft<=x)i=k});keep=[i,(x-1-doors[i].offsetLeft)/doors[i].offsetWidth]},{passive:true});
 new ResizeObserver(()=>{lastRs=performance.now();stopGlide();const d=doors[keep[0]];track.scrollLeft=d.offsetLeft+keep[1]*d.offsetWidth;target=track.scrollLeft;kick()}).observe(track);
 kick();
+const nudge=document.getElementById('nudge');track.addEventListener('scroll',()=>{if(track.scrollLeft>40)nudge.classList.add('gone')},{passive:true});
+function goTo(x){if(pageQ.matches)track.scrollTo({left:x,behavior:still.matches?'instant':'smooth'});else{if(!anim)target=track.scrollLeft;glide(x)}}
+document.getElementById('go-contact').addEventListener('click',e=>{e.preventDefault();goTo(maxX())});
+const pb=document.getElementById('progbar');let pdrag=false;const seek=e=>{const r=pb.getBoundingClientRect();const x=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*maxX();if(pageQ.matches)track.scrollTo({left:x,behavior:'instant'});else{stopGlide();track.scrollLeft=x;target=x}};
+pb.addEventListener('pointerdown',e=>{pdrag=true;pb.setPointerCapture(e.pointerId);if(pageQ.matches)track.style.scrollSnapType='none';seek(e)});pb.addEventListener('pointermove',e=>{if(pdrag)seek(e)});const pend=()=>{if(!pdrag)return;pdrag=false;track.style.scrollSnapType=''};pb.addEventListener('pointerup',pend);pb.addEventListener('pointercancel',pend);
+document.getElementById('copy').addEventListener('click',async e=>{try{await navigator.clipboard.writeText('francescocoia365@gmail.com');e.target.textContent='Copied'}catch(_){e.target.textContent='Select it'}});
 
 // ---------- cursor label ----------
 const cur=document.getElementById('cur');
