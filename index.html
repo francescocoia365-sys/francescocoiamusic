@@ -70,11 +70,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
 .d-hero .big{font-size:min(4vw,9dvh);white-space:nowrap}
 
 /* 2 — listen */
-.d-listen{width:min(100vw,1380px);display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(28px,5vw,96px)}
+.d-listen{width:min(100vw,1560px);display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(28px,5vw,96px)}
 .d-listen .left{display:flex;flex-direction:column;gap:clamp(14px,3dvh,30px);height:100%}
-.d-listen .ph{flex:1;aspect-ratio:4/5;align-self:flex-start;max-width:min(40vw,560px)}
+.d-listen .ph{flex:1;aspect-ratio:4/5;align-self:flex-start;max-width:min(30vw,460px)}
 .d-listen .ph img{object-position:50% 25%}
-.pl{align-self:end;display:grid;grid-template-rows:repeat(8,minmax(0,1fr));gap:2px;height:min(100%,600px)}
+.pl{align-self:end;display:grid;grid-template-rows:repeat(6,minmax(0,1fr));grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px clamp(10px,2vw,32px);height:min(100%,480px)}
 .tr{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;column-gap:14px;padding:0 20px 0 10px;border-radius:999px;cursor:pointer;position:relative;transition:background .3s}
 .tr:hover,.tr.on{background:#141312}
 .tr button{width:38px;height:38px;border-radius:50%;border:1px solid #3a3835;background:none;color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0;transition:border-color .3s,background .3s,color .3s}
@@ -145,7 +145,9 @@ input:focus,textarea:focus{border-color:#4a4744}
 
 /* short screens (phones on their side) */
 @media (max-height:520px){
-  .pl{grid-template-rows:repeat(4,minmax(0,1fr));grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);column-gap:10px;align-self:stretch;height:100%}
+  .pl{grid-template-rows:repeat(4,minmax(0,1fr));column-gap:6px;align-self:stretch;height:100%}
+  .tr{grid-template-columns:40px minmax(0,1fr) auto;padding:0 10px 0 4px;column-gap:8px}
+  .tr button{width:32px;height:32px}
   .tr .t{font-size:14px}.tr .t small{font-size:11.5px}
   .d-listen .ph{display:none}
   .d-works .head{flex-wrap:nowrap}
@@ -166,10 +168,12 @@ input:focus,textarea:focus{border-color:#4a4744}
   .d-hero .big{font-size:min(9.6vw,60px)}
   .d-listen .left{height:auto}
   .d-listen .ph{display:none}
-  .pl{flex:1;align-self:stretch;height:auto;max-height:640px}
+  .pl{flex:1;align-self:stretch;height:auto;max-height:760px;grid-template-rows:repeat(12,minmax(0,1fr));grid-auto-flow:row;gap:0}
   .tr{padding:0 14px 0 6px;column-gap:10px}
-  .tr .t{font-size:15.5px}
-  .tr button{width:40px;height:40px}
+  .tr .t{font-size:clamp(13.5px,1.9dvh,16px)}
+  .tr .t small{font-size:clamp(11px,1.5dvh,12.5px)}
+  .tr button{width:clamp(30px,4.6dvh,40px);height:clamp(30px,4.6dvh,40px)}
+  .tr .bar{bottom:0}
   .tr .bar{left:64px;right:16px}
   .d-works{width:100vw;scroll-snap-align:start;scroll-snap-stop:always;gap:16px}
   .d-works .head{display:grid;gap:14px}
@@ -185,6 +189,8 @@ input:focus,textarea:focus{border-color:#4a4744}
   .np{max-width:46vw}
 }
 @media (max-width:760px){.d-about p:last-child{display:none}}
+@media (max-width:760px) and (max-height:700px){.tr .t small{display:none}}
+@media (min-width:600px) and (max-width:1024px) and (orientation:portrait){.pl{grid-template-rows:repeat(6,minmax(0,1fr));grid-auto-flow:column;max-height:520px;align-self:end;flex:none;height:520px}.d-listen{justify-content:space-between}}
 </style>
 </head>
 <body>
@@ -254,7 +260,7 @@ input:focus,textarea:focus{border-color:#4a4744}
 {
 const AUDIO={};   // track id -> file in audio/
 const POSTERS={}; // work title -> file in posters/
-const TRACKS=[['s1','Bella ci dormi','2:40','Jusqu’au prochain souffle'],['s2','Echoes of the True Self','1:59','Murdrum'],['s3','p e r d e r e','2:29','Birthday'],['s4','Breath Out','2:22','Façade'],['s5','On The Ring','3:00','Nino Benvenuti · with Andrea Pagliara'],['s6','Alfredo','1:30','Alfredo · with Andrea Pagliara'],['s7','Vicini Vicini','1:11','Sicilia Express · theme by Paolo Buonvino, arr.'],['s8','A Home That No Longer Remembers Us','2:47','In development']];
+const TRACKS=[['t01','A Home That No Longer Remembers Us','2:47','In development'],['t02','The Weight of an Invisible Shadow','4:22','LeO'],['t03','Bodies Out of Focus','2:58','LeO'],['t04','Bella ci dormi','2:40','Jusqu’au prochain souffle'],['t05','Breath Out','2:22','Façade'],['t06','Everything Returns, Slightly Changed','4:14','LeO · with Andrea Pagliara'],['t07','What Remains Between Us','4:33','LeO · with Andrea Pagliara'],['t08','Echoes of the True Self','1:59','Murdrum'],['t09','p e r d e r e','2:29','Birthday'],['t10','On The Ring','3:00','Nino Benvenuti · with Andrea Pagliara'],['t11','Alfredo','1:30','Alfredo · with Andrea Pagliara'],['t12','Vicini Vicini','1:11','Sicilia Express · theme by Paolo Buonvino, arr.']];
 const WORKS={
  film:[['Le Cose Non Dette','2026','Gabriele Muccino','Electronic programming, assistant to composer'],['Dio Ride','2026','Giovanni Veronesi','Electronic programming, assistant to composer'],['Bare','2026','Lorna Tucker','Electronic programming, assistant to composer'],['Starmaker','2026','Joshua David Pivato','Composer']],
  tv:[['Sicilia Express','2025','Netflix','Arranger, electronic programming, assistant to composer'],['Nino Benvenuti','2025','Rai Storia','Additional music, guitars']],
