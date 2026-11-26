@@ -91,34 +91,35 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
 .tr.on .bar{display:block}
 .tr.off{opacity:.72;cursor:default}
 
-/* 3 — works: one page, four shelves */
-.d-works{width:min(100vw,1500px);display:flex;flex-direction:column;gap:clamp(14px,3dvh,30px)}
-.d-works .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px 40px;flex-wrap:wrap}
-.tabs{display:flex;gap:8px;flex-wrap:wrap}
-.tabs button{font:300 9.5px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);background:none;border:1px solid #2a2826;border-radius:999px;padding:11px 16px;cursor:pointer;transition:color .3s,background .3s,border-color .3s;white-space:nowrap}
-.tabs button sup{font-size:.8em;margin-left:6px;opacity:.7}
-.tabs button:hover{color:var(--ink);border-color:#4a4744}
-.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.d-works{width:min(100vw,1440px)}
-.wk{flex:1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(24px,5vw,90px)}
-.wlist{display:grid;grid-template-rows:repeat(4,minmax(0,1fr));transition:opacity .22s}
-.wlist.out{opacity:0}
-.wr{display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:clamp(2px,.8dvh,8px);border-top:1px solid #1f1e1c;cursor:pointer;opacity:.42;transition:opacity .35s,padding .35s;padding-left:0}
-.wr:first-child{border-top:0}
-.wr.on{opacity:1;padding-left:clamp(0px,1vw,18px)}
-.wr h3{margin:0;font:200 min(3vw,5.6dvh,44px)/1.08 var(--disp);letter-spacing:-.02em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.wr p{margin:0;font:400 clamp(12px,1.9dvh,15px)/1.4 var(--sans);color:var(--soft);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.wr p b{font:300 .72em var(--disp);letter-spacing:.14em;color:var(--mute);margin-right:12px}
-.wr .th{display:none}
-.poster{position:relative;height:100%;aspect-ratio:2/3;max-width:38vw;border-radius:24px;overflow:hidden;background:#141312}
-.poster i{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .5s}
-.poster i.on{opacity:1}
-.pager{display:flex;align-items:center;gap:14px;height:44px}
-.pager.one{visibility:hidden}
-.pager button{width:44px;height:44px;border-radius:50%;border:1px solid #3a3835;background:none;color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0;transition:background .3s,color .3s,border-color .3s,opacity .3s}
-.pager button:hover:not(:disabled){background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.pager button:disabled{opacity:.3;cursor:default}
-.pager span{font:300 9.5px var(--disp);letter-spacing:.16em;color:var(--mute);min-width:5em;text-align:center}
+/* 3 — works: every poster, newest first, the year rising behind */
+.d-photo{display:none}
+.d-works{display:flex;padding-inline:0;overflow:visible;overflow:clip;--ph:min(50dvh,520px);--ny:min(30vw,52dvh)}
+.yr{position:relative;flex:none;display:grid;height:100%;padding-left:var(--padX)}
+.yr>*{grid-area:1/1}
+.yr:last-child{padding-right:var(--padX)}
+.yr .num{position:sticky;left:var(--padX);align-self:start;justify-self:start;padding-right:.12em;white-space:nowrap;font:200 var(--ny)/.8 var(--disp);letter-spacing:-.05em;color:#1b1a19;pointer-events:none;margin-top:-.04em}
+.row{position:relative;z-index:1;display:flex;gap:clamp(16px,2vw,34px);align-items:flex-end;justify-self:start}
+.cv{flex:none;width:calc(var(--ph)*var(--r));display:grid;gap:12px;transform-origin:50% 100%;transform:scale(calc(.9 + .1*var(--f,1)));opacity:calc(.55 + .45*var(--f,1));will-change:transform,opacity}
+.cv .pic{height:var(--ph);border-radius:18px;overflow:hidden;background:#141312}
+.cv .pic img{width:100%;height:100%;object-fit:cover}
+.cv .b{height:64px;overflow:hidden}
+.cv h3{margin:0;font:300 clamp(13px,1.9dvh,17px)/1.2 var(--disp);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv p{margin:5px 0 0;font:400 12.5px/1.35 var(--sans);color:var(--mute);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* watch */
+.d-watch{width:min(100vw,1440px);display:flex;flex-direction:column;justify-content:space-between;gap:20px;--vh:calc((100dvh - var(--padT) - var(--padB) - 15dvh - 120px)/2)}
+.vids{display:grid;max-width:100%;grid-template-columns:repeat(2,minmax(0,calc(var(--vh)*16/9)));gap:clamp(12px,1.6vw,26px);align-self:flex-end}
+.vd{display:grid;gap:10px;background:none;border:0;padding:0;color:var(--ink);text-align:left;cursor:pointer}
+.vd .th{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#141312}
+.vd .th img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s cubic-bezier(.2,.7,.1,1)}
+.vd:hover .th img{transform:scale(1.05)}
+.vd .th::after{content:"";position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px;border-radius:50%;border:1px solid var(--ink);background:rgba(7,7,7,.35) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M3 1.5v7l6-3.5z' fill='%23ece9e4'/%3E%3C/svg%3E") center/12px no-repeat}
+.vd span{font:300 clamp(10px,1.1vw,13px)/1.3 var(--disp);letter-spacing:.02em}
+.lb{position:fixed;inset:0;z-index:80;background:rgba(7,7,7,.94);display:none;place-items:center;padding:max(60px,env(safe-area-inset-top)) var(--padX)}
+.lb.on{display:grid}
+.lb .fr{width:min(100%,calc((100dvh - 140px)*16/9));aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#000}
+.lb iframe{width:100%;height:100%;border:0;display:block}
+.lb button{position:absolute;top:max(22px,calc(env(safe-area-inset-top) + 8px));right:var(--padX);font:300 9.5px var(--disp);letter-spacing:.16em;text-transform:uppercase;color:var(--ink);background:none;border:1px solid #3a3835;border-radius:999px;padding:10px 16px;cursor:pointer}
 
 /* 4 — about */
 .d-about{width:min(100vw,1320px);display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(28px,5vw,96px);align-items:end}
@@ -158,11 +159,11 @@ input:focus,textarea:focus{border-color:#4a4744}
   .tr button{width:32px;height:32px}
   .tr .t{font-size:14px}.tr .t small{font-size:11.5px}
   .d-listen .ph{display:none}
-  .d-works .head{flex-wrap:nowrap}
-  .d-works{gap:8px}
-  .pager{position:absolute;right:var(--padX);bottom:calc(var(--padB) + 0px);height:36px}
-  .pager button{width:36px;height:36px}
-  .poster{margin-right:150px}
+  .cv .b{height:36px}.cv p{-webkit-line-clamp:1}.cv{gap:6px}
+  .d-works{--ph:min(46dvh,520px)}
+  .vd span{font-size:9px}
+  .d-watch{flex-direction:row;align-items:center;gap:30px}
+  .vids{grid-template-columns:repeat(4,minmax(0,1fr));flex:1;align-self:center}
   .d-about h2,.d-about p:last-child{display:none}
   form{grid-template-columns:1fr 1fr;max-width:none}
   form label:nth-of-type(3),.foot,.note{grid-column:1/-1}
@@ -187,18 +188,23 @@ input:focus,textarea:focus{border-color:#4a4744}
   .tr button{width:clamp(30px,4.6dvh,40px);height:clamp(30px,4.6dvh,40px)}
   .tr .bar{bottom:0}
   .tr .bar{left:64px;right:16px}
-  .d-works{width:100vw;scroll-snap-align:start;scroll-snap-stop:always;gap:16px}
-  .d-works .head{display:grid;gap:14px}
-  .tabs{gap:6px}
-  .tabs button{padding:10px 12px;font-size:9px}
-  .wk{grid-template-columns:minmax(0,1fr)}
-  .poster{display:none}
-  .wr{grid-template-columns:auto minmax(0,1fr);column-gap:16px;align-items:center;opacity:1;padding:0!important}
-  .wr .th{display:block;grid-row:1/3;height:min(13dvh,120px);aspect-ratio:2/3;border-radius:10px;background:#141312 center/cover}
-  .wr h3{font-size:clamp(16px,5vw,26px);white-space:normal;align-self:end;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  .wr p{white-space:normal;align-self:start;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:clamp(12px,1.6dvh,14px)}
-  .wr p b{display:block;margin:0 0 2px}
-  .pager{justify-content:space-between}
+  .d-photo{display:block;width:100vw;padding:0;scroll-snap-align:start;scroll-snap-stop:always}
+  .d-photo .ph{position:absolute;inset:0;border-radius:0}
+  .d-photo .ph img{object-position:50% 30%}
+  .d-works{--cw:min(72vw,37dvh,400px);--ny:30vw;scroll-snap-align:none}
+  .yr{padding-left:14px}
+  .yr:first-child{padding-left:calc((100vw - var(--cw))/2)}
+  .yr:last-child{padding-right:calc((100vw - var(--cw))/2)}
+  .yr .num{left:var(--padX)}
+  .yr:first-child .num{margin-left:calc(var(--padX) - (100vw - var(--cw))/2)}
+  .row{gap:14px}
+  .cv{width:var(--cw);scroll-snap-align:center}
+  .cv .pic{height:calc(var(--cw)/var(--r))}
+  .cv .b{height:74px}
+  .cv h3{font-size:clamp(14px,4.2vw,18px)}
+  .d-watch{width:100vw;scroll-snap-align:start;scroll-snap-stop:always;justify-content:flex-start;gap:clamp(18px,4dvh,40px)}
+  .vids{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px;margin-block:auto;align-self:stretch}
+  .vd span{font-size:10.5px}
   .d-about .ph{flex:1;height:auto;aspect-ratio:auto;align-self:stretch;max-width:none}
   .d-about .ph img{object-position:50% 22%}
   .d-about h2{font-size:min(6.4vw,34px)}
@@ -209,7 +215,7 @@ input:focus,textarea:focus{border-color:#4a4744}
 }
 @media (max-width:760px){.d-about p:last-child{display:none}}
 @media (max-width:760px) and (max-height:700px){.tr .t small{display:none}}
-@media (min-width:600px) and (max-width:1024px) and (orientation:portrait){.pl{grid-template-rows:repeat(6,minmax(0,1fr));grid-auto-flow:column;max-height:520px;align-self:end;flex:none;height:520px}.d-listen{justify-content:space-between}}
+@media (min-width:600px) and (max-width:1024px) and (orientation:portrait){.vids{grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 20px;align-self:stretch}.vd span{font-size:13px}.pl{grid-template-rows:repeat(6,minmax(0,1fr));grid-auto-flow:column;max-height:520px;align-self:end;flex:none;height:520px}.d-listen{justify-content:space-between}}
 </style>
 </head>
 <body>
@@ -235,13 +241,13 @@ input:focus,textarea:focus{border-color:#4a4744}
     <div class="pl" id="pl"></div>
   </section>
 
-  <section class="door d-works" id="works">
-    <div class="head"><h2 class="big">Works</h2><div class="tabs" id="tabs" role="tablist"></div></div>
-    <div class="wk">
-      <div class="wlist" id="wlist"></div>
-      <div class="poster" id="poster" aria-hidden="true"><i></i><i></i></div>
-    </div>
-    <div class="pager" id="pager"><button type="button" id="pg-prev" aria-label="Previous works"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M14 8H3M7 4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button><span id="pg-n"></span><button type="button" id="pg-next" aria-label="More works"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
+  <section class="door d-photo" aria-label="Portrait"><div class="ph"><img src="img/p2.jpg" alt="Black and white portrait of Francesco with headphones, looking away" loading="lazy" decoding="async"></div></section>
+
+  <section class="door d-works" id="works" aria-label="Works, newest first"></section>
+
+  <section class="door d-watch" id="watch">
+    <h2 class="big">Watch</h2>
+    <div class="vids" id="vids"></div>
   </section>
 
   <section class="door d-about" id="about">
@@ -276,20 +282,16 @@ input:focus,textarea:focus{border-color:#4a4744}
 </main>
 
 <div class="prog" aria-hidden="true"><i id="prog"></i></div>
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Video"><button type="button" id="lb-x">Close</button><div class="fr" id="lb-fr"></div></div>
 <div class="cur" id="cur" aria-hidden="true">Drag</div>
 <audio id="au" preload="none"></audio>
 
 <script>
 {
-const AUDIO={};   // track id -> file in audio/
-const POSTERS={}; // work title -> file in posters/
-const TRACKS=[['t01','A Home That No Longer Remembers Us','2:47','In development'],['t02','The Weight of an Invisible Shadow','4:22','LeO'],['t03','Bodies Out of Focus','2:58','LeO'],['t04','Bella ci dormi','2:40','Jusqu’au prochain souffle'],['t05','Breath Out','2:22','Façade'],['t06','Everything Returns, Slightly Changed','4:14','LeO · with Andrea Pagliara'],['t07','What Remains Between Us','4:33','LeO · with Andrea Pagliara'],['t08','Echoes of the True Self','1:59','Murdrum'],['t09','p e r d e r e','2:29','Birthday'],['t10','On The Ring','3:00','Nino Benvenuti · with Andrea Pagliara'],['t11','Alfredo','1:30','Alfredo · with Andrea Pagliara'],['t12','Vicini Vicini','1:11','Sicilia Express · theme by Paolo Buonvino, arr.']];
-const WORKS={
- film:[['Le Cose Non Dette','2026','Gabriele Muccino','Electronic programming, assistant to composer'],['Dio Ride','2026','Giovanni Veronesi','Electronic programming, assistant to composer'],['Bare','2026','Lorna Tucker','Electronic programming, assistant to composer'],['Starmaker','2026','Joshua David Pivato','Composer']],
- tv:[['Sicilia Express','2025','Netflix','Arranger, electronic programming, assistant to composer'],['Nino Benvenuti','2025','Rai Storia','Additional music, guitars']],
- stage:[['Luce e Ombra','2026','Accademia Nazionale di Danza','Composer'],['Frida','2026','Opera musical','Arranger, orchestrator'],['Van Gogh Café','2025','Opera musical','Arranger, orchestrator'],['Il Vajont di Tutti','2024','Opera musical','Arranger, orchestrator']],
- shorts:[['Rat Poison','2026','Mina Kaya','Composer'],['Alfredo','2025','Sveva Salimene','Composer'],['Murdrum','2025','Job Gailey','Composer'],['Jusqu’au prochain souffle','2025','','Composer'],['Cicatrix','2024','U. Güven, T. D. Ipek, D. S. Bilgiç','Composer'],['The Chitin Hunter','2024','Pratham Mudbidri','Composer'],['Maintenance','2023','Pablo Aguilar','Composer'],['Birthday','2023','Imogen Walker','Composer'],['Façade','2023','Pratham Mudbidri','Composer'],['Bête Noir','2023','Jeremy Brondoni','Composer'],['Contractors','2023','Michael Payne','Composer'],['Burn To Be Reborn','2022','Irene Loreti, Carla Mariani','Composer']]
-};
+const AUDIO={"t01": "t01.mp3", "t02": "t02.mp3", "t03": "t03.mp3", "t04": "t04.mp3", "t05": "t05.mp3", "t06": "t06.mp3", "t07": "t07.mp3", "t08": "t08.mp3", "t09": "t09.mp3", "t10": "t10.mp3", "t11": "t11.mp3", "t12": "t12.mp3"};   // track id -> file in audio/
+const TRACKS=[["t01", "A Home That No Longer Remembers Us", "2:47", "In development"], ["t02", "The Weight of an Invisible Shadow", "4:22", "LeO"], ["t03", "Bodies Out of Focus", "2:56", "LeO"], ["t04", "Bella ci dormi", "2:40", "Jusqu’au prochain souffle"], ["t05", "Breath Out", "2:22", "Façade"], ["t06", "Everything Returns, Slightly Changed", "4:14", "LeO · with Andrea Pagliara"], ["t07", "What Remains Between Us", "4:37", "LeO · with Andrea Pagliara"], ["t08", "Echoes of the True Self", "1:59", "Murdrum"], ["t09", "p e r d e r e", "2:29", "Birthday"], ["t10", "On The Ring", "3:00", "Nino Benvenuti · with Andrea Pagliara"], ["t11", "Alfredo", "1:30", "Alfredo · with Andrea Pagliara"], ["t12", "Vicini Vicini", "1:11", "Sicilia Express · theme by Paolo Buonvino, arr."]];
+const WORKS=[["2026", [["Le Cose Non Dette", "Film", "Gabriele Muccino", "Electronic programming, assistant to composer", "le-cose-non-dette.jpg", 0.7], ["Dio Ride", "Film", "Giovanni Veronesi", "Electronic programming, assistant to composer", "dio-ride.jpg", 0.7], ["Bare", "Film", "Lorna Tucker", "Electronic programming, assistant to composer", "bare.jpg", 0.678], ["Starmaker", "Film", "Joshua David Pivato", "Composer", "starmaker.jpg", 0.667], ["Luce e Ombra", "Dance", "Accademia Nazionale di Danza", "Composer", "luce-e-ombra.jpg", 1], ["Frida", "Opera musical", "", "Arranger, orchestrator", "frida.jpg", 0.8], ["Rat Poison", "Short", "Mina Kaya", "Composer", "rat-poison.jpg", 0.71]]], ["2025", [["Sicilia Express", "Series", "Netflix", "Arranger, electronic programming, assistant to composer", "sicilia-express.jpg", 0.8], ["Nino Benvenuti", "Documentary", "Rai Storia", "Additional music, guitars", "nino-benvenuti.jpg", 0.798], ["Van Gogh Café", "Opera musical", "", "Arranger, orchestrator", "van-gogh-cafe.jpg", 0.707], ["Alfredo", "Short", "Sveva Salimene", "Composer", "alfredo.jpg", 0.701], ["Murdrum", "Short", "Job Gailey", "Composer", "murdrum.jpg", 0.707], ["Jusqu’au prochain souffle", "Short", "", "Composer", "jusqu-au-prochain-souffle.jpg", 0.707]]], ["2024", [["Il Vajont di Tutti", "Opera musical", "", "Arranger, orchestrator", "il-vajont-di-tutti.jpg", 0.707], ["Cicatrix", "Short", "U. Güven, T. D. Ipek, D. S. Bilgiç", "Composer", "cicatrix.jpg", 0.675], ["The Chitin Hunter", "Short", "Pratham Mudbidri", "Composer", "the-chitin-hunter.jpg", 0.705]]], ["2023", [["Maintenance", "Short", "Pablo Aguilar", "Composer", "maintenance.jpg", 0.707], ["Birthday", "Short", "Imogen Walker", "Composer", "birthday.jpg", 0.707], ["Façade", "Short", "Pratham Mudbidri", "Composer", "facade.jpg", 0.707], ["Bête Noir", "Short", "Jeremy Brondoni", "Composer", "bete-noir.jpg", 0.707], ["Contractors", "Short", "Michael Payne", "Composer", "contractors.jpg", 1]]], ["2022", [["Burn To Be Reborn", "Short", "Irene Loreti, Carla Mariani", "Composer", "burn-to-be-reborn.jpg", 1]]]];
+const VIDEOS=[["ab0v_lUS5qM", "Tape Explorations"], ["puJDctlBKIg", "Speculative Memories"], ["xh6746JX6b8", "FUGUE/TRAMPOLINE"], ["PxWVAe1Pt_Q", "A Night Odyssey (Making Of)"]];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const still=matchMedia('(prefers-reduced-motion:reduce)');
 const pageQ=matchMedia('(max-width:760px),(max-width:1024px) and (orientation:portrait)');
@@ -311,30 +313,22 @@ au.addEventListener('ended',()=>{sync();const all=[...pl.querySelectorAll('.tr:n
 au.addEventListener('timeupdate',()=>{const r=rowOf(curId);if(r&&au.duration)r.querySelector('.bar i').style.width=(au.currentTime/au.duration*100)+'%'});
 np.addEventListener('click',()=>au.pause());
 
-// ---------- works: four at a time, one poster that follows ----------
-const TAB={film:'Film',tv:'Series & Docs',stage:'Stage',shorts:'Shorts'},PER=4;
-const tabs=document.getElementById('tabs'),wlist=document.getElementById('wlist'),poster=document.getElementById('poster'),pager=document.getElementById('pager'),pgN=document.getElementById('pg-n'),pgP=document.getElementById('pg-prev'),pgX=document.getElementById('pg-next');
-let curSet='film',page=0,layer=0;
-const art=t=>POSTERS[t]?`posters/${POSTERS[t]}`:`img/c${hash(t)%12}.jpg`;
-tabs.innerHTML=Object.keys(WORKS).map(k=>`<button type="button" role="tab" data-set="${k}" aria-selected="${k===curSet}">${esc(TAB[k])}<sup>${WORKS[k].length}</sup></button>`).join('');
-function focus(row){wlist.querySelectorAll('.wr').forEach(r=>r.classList.toggle('on',r===row));const ls=poster.children;layer^=1;ls[layer].style.backgroundImage=`url("${row.dataset.art}")`;ls[layer].classList.add('on');ls[layer^1].classList.remove('on')}
-function fill(){const list=WORKS[curSet],pages=Math.ceil(list.length/PER),items=list.slice(page*PER,page*PER+PER);
-  wlist.innerHTML=items.map(([t,y,by,role])=>`<article class="wr" data-art="${esc(art(t))}" tabindex="0"><i class="th" style="background-image:url('${esc(art(t))}')"></i><h3>${esc(t)}</h3><p><b>${y}</b>${by?esc(by)+' · ':''}${esc(role)}</p></article>`).join('');
-  pager.classList.toggle('one',pages<2);pgN.textContent=`${page+1} / ${pages}`;pgP.disabled=page===0;pgX.disabled=page>=pages-1;
-  focus(wlist.firstElementChild);wlist.classList.remove('out')}
-function show(set,p,instant){curSet=set;page=p;tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.set===set)));
-  if(instant||still.matches){fill();return}wlist.classList.add('out');setTimeout(fill,220)}
-tabs.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.dataset.set!==curSet)show(b.dataset.set,0)});
-pgP.addEventListener('click',()=>show(curSet,page-1));pgX.addEventListener('click',()=>show(curSet,page+1));
-['pointerover','focusin','click'].forEach(ev=>wlist.addEventListener(ev,e=>{const r=e.target.closest('.wr');if(r&&!r.classList.contains('on'))focus(r)}));
-show('film',0,true);
+// ---------- works ----------
+document.getElementById('works').innerHTML=WORKS.map(([y,list])=>`<div class="yr"><span class="num" aria-hidden="true">${y}</span><div class="row">${list.map(([t,k,by,role,f,r])=>`<article class="cv" style="--r:${r}"><div class="pic"><img src="posters/${f}" alt="${esc(t)} poster" loading="lazy" decoding="async"></div><div class="b"><h3>${esc(t)}</h3><p>${y} · ${esc(k)}${by?' · '+esc(by):''} · ${esc(role)}</p></div></article>`).join('')}</div></div>`).join('');
+const cards=[...document.querySelectorAll('.cv')];
+// ---------- watch ----------
+const lb=document.getElementById('lb'),lbFr=document.getElementById('lb-fr');
+document.getElementById('vids').innerHTML=VIDEOS.map(([id,t])=>`<button type="button" class="vd" data-v="${id}"><span class="th"><img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="" loading="lazy" decoding="async"></span><span>${esc(t)}</span></button>`).join('');
+document.getElementById('vids').addEventListener('click',e=>{const b=e.target.closest('.vd');if(!b)return;au.pause();lbFr.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${b.dataset.v}?autoplay=1&rel=0&playsinline=1" title="${esc(b.textContent)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;lb.classList.add('on')});
+const closeLb=()=>{lb.classList.remove('on');lbFr.innerHTML=''};
+document.getElementById('lb-x').addEventListener('click',closeLb);lb.addEventListener('click',e=>{if(e.target===lb)closeLb()});
 
 // ---------- the track ----------
 const track=document.getElementById('track'),doors=[...track.querySelectorAll('.door')],prog=document.getElementById('prog');
 const maxX=()=>Math.max(1,track.scrollWidth-track.clientWidth);
 let target=0,anim=0,queued=false;
-function paint(){queued=false;const x=track.scrollLeft;prog.style.transform=`scaleX(${Math.max(0,Math.min(1,x/maxX()))})`;
-}
+function paint(){queued=false;const x=track.scrollLeft,W=innerWidth,mid=W/2,pm=pageQ.matches,reach=pm?W*.8:W*.6;prog.style.transform=`scaleX(${Math.max(0,Math.min(1,x/maxX()))})`;
+  for(const c of cards){const r=c.getBoundingClientRect();if(r.right<-300||r.left>W+300)continue;const f=Math.max(0,1-Math.abs(r.left+r.width/2-mid)/reach);c.style.setProperty('--f',(pm?f*f:Math.min(1,f*2.4)).toFixed(3))}}
 const kick=()=>{if(!queued){queued=true;requestAnimationFrame(paint)}};
 track.addEventListener('scroll',kick,{passive:true});
 function step(){const c=track.scrollLeft,d=target-c;if(Math.abs(d)<.5){track.scrollLeft=target;anim=0;return}track.scrollLeft=c+d*.1;anim=requestAnimationFrame(step)}
@@ -342,11 +336,11 @@ function glide(x){target=Math.max(0,Math.min(maxX(),x));if(still.matches){track.
 const stopGlide=()=>{cancelAnimationFrame(anim);anim=0};
 track.addEventListener('wheel',e=>{if(pageQ.matches)return;const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;e.preventDefault();if(e.deltaMode===0&&Math.abs(d)<50){stopGlide();track.scrollLeft+=d;target=track.scrollLeft;return}if(!anim)target=track.scrollLeft;glide(target+d*1.1)},{passive:false});
 let drag=null;
-track.addEventListener('pointerdown',e=>{if(pageQ.matches||e.pointerType!=='mouse'||e.button!==0||e.target.closest('button,a,input,textarea,label,.tr,.wr,p'))return;drag={x:e.clientX,s:track.scrollLeft,v:0,t:performance.now()};track.classList.add('dragging');stopGlide()});
+track.addEventListener('pointerdown',e=>{if(pageQ.matches||e.pointerType!=='mouse'||e.button!==0||e.target.closest('button,a,input,textarea,label,.tr,.vd,p'))return;drag={x:e.clientX,s:track.scrollLeft,v:0,t:performance.now()};track.classList.add('dragging');stopGlide()});
 addEventListener('pointermove',e=>{if(!drag)return;const t=performance.now(),ns=drag.s-(e.clientX-drag.x);drag.v=(ns-track.scrollLeft)/Math.max(1,t-drag.t);drag.t=t;track.scrollLeft=ns});
 addEventListener('pointerup',()=>{if(!drag)return;track.classList.remove('dragging');const v=drag.v;drag=null;target=track.scrollLeft;glide(target+v*320)});
 function move(dir){if(pageQ.matches){track.scrollBy({left:dir*innerWidth*.7,behavior:still.matches?'instant':'smooth'});return}if(!anim)target=track.scrollLeft;glide(target+dir*innerWidth*.6)}
-document.addEventListener('keydown',e=>{if(e.target.closest('input,textarea'))return;if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();move(1)}if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();move(-1)}if(e.key==='Home'){stopGlide();glide(0)}if(e.key==='End'){stopGlide();glide(maxX())}if(e.key===' '&&curId){e.preventDefault();au.paused?play(curId):au.pause()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&lb.classList.contains('on')){closeLb();return}if(e.target.closest('input,textarea'))return;if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();move(1)}if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();move(-1)}if(e.key==='Home'){stopGlide();glide(0)}if(e.key==='End'){stopGlide();glide(maxX())}if(e.key===' '&&curId){e.preventDefault();au.paused?play(curId):au.pause()}});
 document.getElementById('home').addEventListener('click',e=>{e.preventDefault();if(pageQ.matches)track.scrollTo({left:0,behavior:'smooth'});else{if(!anim)target=track.scrollLeft;glide(0)}});
 // stay on the same spot when the window turns or resizes
 let keep=[0,0],lastRs=0;
@@ -356,7 +350,7 @@ kick();
 
 // ---------- cursor label ----------
 const cur=document.getElementById('cur');
-if(matchMedia('(pointer:fine)').matches)addEventListener('pointermove',e=>{cur.style.transform=`translate(${e.clientX}px,${e.clientY}px)`;const t=e.target;cur.classList.toggle('on',!pageQ.matches&&!!t.closest&&!!t.closest('#track')&&!t.closest('a,button,input,textarea,label,.tr,.wr,p'))});
+if(matchMedia('(pointer:fine)').matches)addEventListener('pointermove',e=>{cur.style.transform=`translate(${e.clientX}px,${e.clientY}px)`;const t=e.target;cur.classList.toggle('on',!pageQ.matches&&!!t.closest&&!!t.closest('#track')&&!t.closest('a,button,input,textarea,label,.tr,.vd,p'))});
 
 // ---------- form -> prefilled email ----------
 document.getElementById('form').addEventListener('submit',e=>{e.preventDefault();const n=document.getElementById('f-name').value.trim(),pj=document.getElementById('f-proj').value.trim(),m=document.getElementById('f-msg').value.trim(),note=document.getElementById('note');
