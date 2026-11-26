@@ -396,7 +396,6 @@ input:focus,textarea:focus{border-color:#4a4744}
       <label><span class="cap">Message</span><textarea id="f-msg" name="message" required></textarea></label>
       <div class="foot">
         <button class="send" type="submit"><span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></span>Send</button>
-        <p class="mailline">or <a href="mailto:francescocoia365@gmail.com" data-umami-event="Mail link">francescocoia365@gmail.com</a> <button type="button" class="copy" id="copy">Copy</button></p>
       </div>
       <p class="note" id="note" aria-live="polite"></p>
     </form>
@@ -485,7 +484,6 @@ function goTo(x){if(pageQ.matches)track.scrollTo({left:x,behavior:still.matches?
 document.getElementById('go-contact').addEventListener('click',e=>{e.preventDefault();goTo(maxX())});
 const pb=document.getElementById('progbar');let pdrag=false;const seek=e=>{const r=pb.getBoundingClientRect();const x=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*maxX();if(pageQ.matches)track.scrollTo({left:x,behavior:'instant'});else{stopGlide();track.scrollLeft=x;target=x}};
 pb.addEventListener('pointerdown',e=>{pdrag=true;pb.setPointerCapture(e.pointerId);if(pageQ.matches)track.style.scrollSnapType='none';seek(e)});pb.addEventListener('pointermove',e=>{if(pdrag)seek(e)});const pend=()=>{if(!pdrag)return;pdrag=false;track.style.scrollSnapType=''};pb.addEventListener('pointerup',pend);pb.addEventListener('pointercancel',pend);
-document.getElementById('copy').addEventListener('click',async e=>{tk('Copy mail');try{await navigator.clipboard.writeText('francescocoia365@gmail.com');e.target.textContent='Copied'}catch(_){e.target.textContent='Select it'}});
 
 // ---------- cursor label ----------
 const cur=document.getElementById('cur');
@@ -496,7 +494,7 @@ document.getElementById('form').addEventListener('submit',e=>{e.preventDefault()
   if(!n||!m){note.textContent='Please add your name and a message.';return}
   note.textContent='Opening your email app…';
   tk('Contact form');
-  location.href=`mailto:francescocoia365@gmail.com?subject=${encodeURIComponent((pj?pj+' — ':'')+'from '+n)}&body=${encodeURIComponent(m+'\n\n'+n+(pj?'\nProject: '+pj:''))}`});
+  location.href=`mailto:${['francescocoia365','gmail.com'].join('@')}?subject=${encodeURIComponent((pj?pj+' — ':'')+'from '+n)}&body=${encodeURIComponent(m+'\n\n'+n+(pj?'\nProject: '+pj:''))}`});
 }
 </script>
 </body>
