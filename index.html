@@ -21,10 +21,18 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Francesco Coia","jobTitle":"Composer","url":"https://francescocoiamusic.com/","image":"https://francescocoiamusic.com/img/share.jpg","address":{"@type":"PostalAddress","addressLocality":"Rome","addressCountry":"IT"},"sameAs":["https://www.imdb.com/name/nm15832216/"]}</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='16' fill='%23070707'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23ece9e4'/%3E%3C/svg%3E">
 <link rel="preload" as="image" href="img/hero.jpg" fetchpriority="high">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="preload" as="font" type="font/woff2" href="fonts/unbounded-latin-200-normal.woff2" crossorigin>
 <style>
+@font-face{font-family:"Unbounded";font-style:normal;font-display:swap;font-weight:200;src:url(fonts/unbounded-latin-ext-200-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Unbounded";font-style:normal;font-display:swap;font-weight:200;src:url(fonts/unbounded-latin-200-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Unbounded";font-style:normal;font-display:swap;font-weight:300;src:url(fonts/unbounded-latin-ext-300-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Unbounded";font-style:normal;font-display:swap;font-weight:300;src:url(fonts/unbounded-latin-300-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Unbounded";font-style:normal;font-display:swap;font-weight:400;src:url(fonts/unbounded-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Unbounded";font-style:normal;font-display:swap;font-weight:400;src:url(fonts/unbounded-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"DM Sans";font-style:normal;font-display:swap;font-weight:400;src:url(fonts/dm-sans-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"DM Sans";font-style:normal;font-display:swap;font-weight:400;src:url(fonts/dm-sans-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"DM Sans";font-style:normal;font-display:swap;font-weight:500;src:url(fonts/dm-sans-latin-ext-500-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"DM Sans";font-style:normal;font-display:swap;font-weight:500;src:url(fonts/dm-sans-latin-500-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 /* VOICE: quiet, nocturnal, exact
    IDEA: one corridor you move through sideways; nothing ever scrolls down
    PICTURE: film stills at full height, posters that come into focus as they pass the centre
@@ -252,6 +260,29 @@ input:focus,textarea:focus{border-color:#4a4744}
 @media (max-width:760px) and (max-height:780px){.tr .t small{display:none}}
 @media (min-width:600px) and (max-width:1024px) and (orientation:portrait){.pl{grid-template-rows:repeat(7,minmax(0,1fr));grid-auto-flow:column;max-height:600px;align-self:end;flex:none;height:600px}.d-listen{justify-content:space-between}}
 @media (max-width:760px) and (max-height:480px){.wtxt .cap{display:none}.wbg{margin:0 auto;height:calc(100dvh - var(--padT) - var(--padB) - 92px);width:auto;align-self:center}.wtxt .big{min-height:0;text-align:center;font-size:14px}.wsel{width:min(100%,46dvh*16/9);align-self:center;margin:0 auto}.d-watch{gap:8px;justify-content:center}}
+/* ---- every text page owns the whole screen, so neighbours never show through ---- */
+.d-listen,.d-about,.d-contact{width:100vw;padding-inline:max(var(--padX),calc((100vw - 1400px)/2))}
+.d-about h2{font:200 clamp(22px,min(2.6vw,5dvh),40px)/1.15 var(--disp)}
+.d-contact .big{font-size:min(4.4vw,9.5dvh)}
+.pitch{margin:0;max-width:36ch;font:400 clamp(15px,2.2dvh,19px)/1.5 var(--sans);color:var(--soft)}
+.wlabel{position:sticky;left:var(--padX);width:0;white-space:nowrap;align-self:flex-start;z-index:2;margin-top:calc(var(--padT) - 4px);color:var(--soft)}
+.d-works{padding-top:0}
+.yr{padding-top:calc(var(--padT) + 22px)}
+/* watch selector with thumbnails (desktop) */
+.wsel button i{display:block;flex:none;width:clamp(64px,7vw,104px);aspect-ratio:16/9;border-radius:4px;background:#141312 var(--t) center/cover;opacity:.55;transition:opacity .3s,box-shadow .3s;order:3}
+.wsel button:hover i,.wsel button[aria-selected=true] i{opacity:1}
+.wsel button[aria-selected=true] i{box-shadow:0 0 0 1px var(--ink)}
+.wsel button{align-items:center;padding:6px 0}
+.wsel button[aria-selected=true]::after{display:none}
+@media (max-width:760px),(max-width:1024px) and (orientation:portrait){
+  .d-listen,.d-about,.d-contact{padding-inline:var(--padX)}
+  .wsel button i{display:none}
+  .wsel button{padding:0}
+  .d-contact .big{font-size:min(9.4vw,56px)}
+  .pitch{max-width:none}
+  .yr{padding-top:calc(var(--padT) + 20px)}
+}
+@media (max-height:520px){.wsel button i{width:56px}.wsel button{padding:3px 0}.pitch{display:none}}
 </style>
 </head>
 <body>
@@ -295,7 +326,7 @@ input:focus,textarea:focus{border-color:#4a4744}
   <section class="door d-about" id="about">
     <div class="ph"><img src="img/about.jpg" alt="Francesco at the desk, eyes lowered, warm lamp light" loading="lazy" decoding="async"></div>
     <div class="txt">
-      <h2>Between the orchestra and the machine</h2>
+      <h2>Music that listens first.</h2>
       <p>Francesco Coia is an Italian composer, arranger, orchestrator and sound designer based in Rome. He writes for film, television, theatre, dance and video games, moving between orchestral writing, electronic production and experimental sound.</p>
       <p>He works alongside Paolo Buonvino in Rome and Aska Matsumiya in Paris, on feature films, a Netflix series, broadcast documentaries and large-scale theatre. Projects he has contributed to have been recognised at the Nastri d’Argento and Globi d’Oro and presented at the Venice International Film Festival.</p>
       <p>He holds a Bachelor’s in Jazz from the Conservatory of Pescara and a Master’s in Applied Music from Saint Louis College of Music in Rome, both with highest honours.</p>
@@ -304,11 +335,9 @@ input:focus,textarea:focus{border-color:#4a4744}
 
   <section class="door d-contact" id="contact">
     <div class="head">
-      <h2 class="big">Write</h2>
-      <div class="links">
-        <a href="https://www.imdb.com/name/nm15832216/" target="_blank" rel="noopener">IMDb ↗</a>
-        <a href="https://play.reelcrafter.com/francesccoia/demoreel" target="_blank" rel="noopener">Full reel ↗</a>
-      </div>
+      <h2 class="big">Let’s work<br>together</h2>
+      <p class="pitch">Send me the film that’s still in your head. I’ll tell you what it sounds like.</p>
+      <div class="links"><a href="https://www.imdb.com/name/nm15832216/" target="_blank" rel="noopener">IMDb ↗</a></div>
     </div>
     <form id="form" novalidate>
       <label><span class="cap">Name</span><input id="f-name" name="name" autocomplete="name" required></label>
@@ -331,7 +360,7 @@ input:focus,textarea:focus{border-color:#4a4744}
 <script>
 {
 const AUDIO={"t01": "t01.mp3", "t02": "t02.mp3", "t03": "t03.mp3", "t04": "t04.mp3", "t05": "t05.mp3", "t06": "t06.mp3", "t07": "t07.mp3", "t08": "t08.mp3", "t09": "t09.mp3", "t10": "t10.mp3", "t11": "t11.mp3", "t12": "t12.mp3", "t13": "t13.mp3", "t14": "t14.mp3"};   // track id -> file in audio/
-const TRACKS=[["t04", "Bella ci dormi", "2:40", "Jusqu’au prochain souffle · short film, 2025"], ["t01", "A Home That No Longer Remembers Us", "2:47", "Unreleased · from a project in development"], ["t08", "Echoes of the True Self", "1:59", "Murdrum · short film by Job Gailey, 2025"], ["t05", "Breath Out", "2:22", "Façade · short film by Pratham Mudbidri, 2023"], ["t02", "The Weight of an Invisible Shadow", "4:22", "Luce e Ombra, I · contemporary dance, 2026"], ["t14", "Where the Light Begins to Fracture", "4:33", "Luce e Ombra, IV · contemporary dance, 2026"], ["t03", "Bodies Out of Focus", "2:56", "Luce e Ombra, II · contemporary dance, 2026"], ["t13", "An Architecture of Echoes", "3:44", "Luce e Ombra, III · contemporary dance, 2026"], ["t06", "Everything Returns, Slightly Changed", "4:14", "Luce e Ombra, VI · with Andrea Pagliara"], ["t07", "What Remains Between Us", "4:37", "Luce e Ombra, V · with Andrea Pagliara"], ["t09", "p e r d e r e", "2:29", "Birthday · short film by Imogen Walker, 2023"], ["t10", "On The Ring", "3:00", "Nino Benvenuti · documentary, Rai Storia · with Andrea Pagliara"], ["t11", "Alfredo", "1:30", "Alfredo · short film by Sveva Salimene · with Andrea Pagliara"], ["t12", "Vicini Vicini", "1:11", "Sicilia Express · Netflix series · theme by Paolo Buonvino, arranged"]];
+const TRACKS=[["t04", "Bella ci dormi", "2:40", "Jusqu’au prochain souffle · short film, 2025"], ["t08", "Echoes of the True Self", "1:59", "Murdrum · short film by Job Gailey, 2025"], ["t01", "A Home That No Longer Remembers Us", "2:47", "Unreleased · from a project in development"], ["t05", "Breath Out", "2:22", "Façade · short film by Pratham Mudbidri, 2023"], ["t02", "The Weight of an Invisible Shadow", "4:22", "Luce e Ombra, I · contemporary dance, 2026"], ["t14", "Where the Light Begins to Fracture", "4:33", "Luce e Ombra, IV · contemporary dance, 2026"], ["t03", "Bodies Out of Focus", "2:56", "Luce e Ombra, II · contemporary dance, 2026"], ["t13", "An Architecture of Echoes", "3:44", "Luce e Ombra, III · contemporary dance, 2026"], ["t06", "Everything Returns, Slightly Changed", "4:14", "Luce e Ombra, VI · with Andrea Pagliara"], ["t07", "What Remains Between Us", "4:37", "Luce e Ombra, V · with Andrea Pagliara"], ["t09", "p e r d e r e", "2:29", "Birthday · short film by Imogen Walker, 2023"], ["t10", "On The Ring", "3:00", "Nino Benvenuti · documentary, Rai Storia · with Andrea Pagliara"], ["t11", "Alfredo", "1:30", "Alfredo · short film by Sveva Salimene · with Andrea Pagliara"], ["t12", "Vicini Vicini", "1:11", "Sicilia Express · Netflix series · theme by Paolo Buonvino, arranged"]];
 const WORKS=[["2026", [["Le Cose Non Dette", "Film", "Gabriele Muccino", "Electronic programming, assistant to composer", "le-cose-non-dette.jpg", 0.667], ["Dio Ride", "Film", "Giovanni Veronesi", "Electronic programming, assistant to composer", "dio-ride.jpg", 0.667], ["Bare", "Film", "Lorna Tucker", "Electronic programming, assistant to composer", "bare.jpg", 0.667], ["Starmaker", "Film", "Joshua David Pivato", "Composer", "starmaker.jpg", 0.667], ["Luce e Ombra", "Dance", "Accademia Nazionale di Danza", "Composer", "luce-e-ombra.jpg", 0.667], ["Frida", "Opera musical", "", "Arranger, orchestrator", "frida.jpg", 0.667], ["Rat Poison", "Short", "Mina Kaya", "Composer", "rat-poison.jpg", 0.667]]], ["2025", [["Sicilia Express", "Series", "Netflix", "Arranger, electronic programming, assistant to composer", "sicilia-express.jpg", 0.667], ["Nino Benvenuti", "Documentary", "Rai Storia", "Additional music, guitars", "nino-benvenuti.jpg", 0.667], ["Van Gogh Café", "Opera musical", "", "Arranger, orchestrator", "van-gogh-cafe.jpg", 0.667], ["Alfredo", "Short", "Sveva Salimene", "Composer", "alfredo.jpg", 0.667], ["Murdrum", "Short", "Job Gailey", "Composer", "murdrum.jpg", 0.667], ["Jusqu’au prochain souffle", "Short", "", "Composer", "jusqu-au-prochain-souffle.jpg", 0.667]]], ["2024", [["Il Vajont di Tutti", "Opera musical", "", "Arranger, orchestrator", "il-vajont-di-tutti.jpg", 0.667], ["Cicatrix", "Short", "U. Güven, T. D. Ipek, D. S. Bilgiç", "Composer", "cicatrix.jpg", 0.667], ["The Chitin Hunter", "Short", "Pratham Mudbidri", "Composer", "the-chitin-hunter.jpg", 0.667]]], ["2023", [["Maintenance", "Short", "Pablo Aguilar", "Composer", "maintenance.jpg", 0.667], ["Birthday", "Short", "Imogen Walker", "Composer", "birthday.jpg", 0.667], ["Façade", "Short", "Pratham Mudbidri", "Composer", "facade.jpg", 0.667], ["Bête Noir", "Short", "Jeremy Brondoni", "Composer", "bete-noir.jpg", 0.667], ["Contractors", "Short", "Michael Payne", "Composer", "contractors.jpg", 0.667]]], ["2022", [["Burn To Be Reborn", "Short", "Irene Loreti, Carla Mariani", "Composer", "burn-to-be-reborn.jpg", 0.667]]]];
 const VIDEOS=[["ab0v_lUS5qM", "Tape Explorations"], ["puJDctlBKIg", "Speculative Memories"], ["xh6746JX6b8", "FUGUE/TRAMPOLINE"], ["PxWVAe1Pt_Q", "A Night Odyssey (Making Of)"]];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -356,12 +385,12 @@ au.addEventListener('timeupdate',()=>{const r=rowOf(curId);if(r&&au.duration)r.q
 np.addEventListener('click',()=>au.pause());
 
 // ---------- works ----------
-document.getElementById('works').innerHTML=WORKS.map(([y,list])=>`<div class="yr"><span class="num" aria-hidden="true">${y}</span><div class="row">${list.map(([t,k,by,role,f,r])=>`<article class="cv" style="--r:${r}"><div class="pic"><img src="posters/${f}" alt="${esc(t)} poster" loading="lazy" decoding="async"></div><div class="b"><h3>${esc(t)}</h3><p>${y} · ${esc(k)}${by?' · '+esc(by):''} · ${esc(role)}</p></div></article>`).join('')}</div></div>`).join('');
+document.getElementById('works').innerHTML='<span class="wlabel cap">Selected works</span>'+WORKS.map(([y,list])=>`<div class="yr"><span class="num" aria-hidden="true">${y}</span><div class="row">${list.map(([t,k,by,role,f,r])=>`<article class="cv" style="--r:${r}"><div class="pic"><img src="posters/${f}" alt="${esc(t)} poster" loading="lazy" decoding="async"></div><div class="b"><h3>${esc(t)}</h3><p>${y} · ${esc(k)}${by?' · '+esc(by):''} · ${esc(role)}</p></div></article>`).join('')}</div></div>`).join('');
 const cards=[...document.querySelectorAll('.cv')];
 // ---------- watch ----------
 const lb=document.getElementById('lb'),lbFr=document.getElementById('lb-fr'),wbg=document.getElementById('wbg'),wsel=document.getElementById('wsel'),wtitle=document.getElementById('wtitle');
 let wi=-1,wl=0;
-wsel.innerHTML=VIDEOS.map(([id,t],i)=>`<button type="button" role="tab" data-i="${i}" aria-selected="false" aria-label="${esc(t)}" style="--t:url(https://i.ytimg.com/vi/${id}/mqdefault.jpg)"><b>0${i+1}</b>${esc(t)}</button>`).join('');
+wsel.innerHTML=VIDEOS.map(([id,t],i)=>`<button type="button" role="tab" data-i="${i}" aria-selected="false" aria-label="${esc(t)}" style="--t:url(https://i.ytimg.com/vi/${id}/mqdefault.jpg)"><b>0${i+1}</b>${esc(t)}<i></i></button>`).join('');
 function pick(i){if(i===wi)return;wi=i;const [id,t]=VIDEOS[i];wtitle.textContent=t;wsel.querySelectorAll('button').forEach((b,k)=>b.setAttribute('aria-selected',String(k===i)));
   wl^=1;const im=wbg.children[wl];im.onerror=()=>{im.onerror=null;im.src=`https://i.ytimg.com/vi/${id}/hqdefault.jpg`};im.onload=()=>{if(im.naturalWidth<200&&im.onerror)im.onerror()};im.src=`https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;im.classList.add('on');wbg.children[wl^1].classList.remove('on')}
 function playVid(){const [id,t]=VIDEOS[wi];au.pause();lbFr.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1" title="${esc(t)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;lb.classList.add('on')}
