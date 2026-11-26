@@ -329,6 +329,7 @@ input:focus,textarea:focus{border-color:#4a4744}
 .yr{padding-top:var(--padT)}
 @media (max-width:760px) and (max-height:700px){.d-about .ph{display:none}.d-about{justify-content:flex-end}}
 </style>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="316d95d2-56e9-49cc-b9e7-a5a62e7ffebe" data-domains="francescocoiamusic.com,www.francescocoiamusic.com"></script>
 </head>
 <body>
 <header class="top">
@@ -387,7 +388,7 @@ input:focus,textarea:focus{border-color:#4a4744}
     <div class="head">
       <h2 class="big">Let’s work<br>together</h2>
       <p class="pitch">Send me the film that’s still in your head. I’ll tell you what it sounds like.</p>
-      <div class="links"><a href="https://www.imdb.com/name/nm15832216/" target="_blank" rel="noopener">IMDb ↗</a></div>
+      <div class="links"><a href="https://www.imdb.com/name/nm15832216/" target="_blank" rel="noopener" data-umami-event="IMDb">IMDb ↗</a></div>
     </div>
     <form id="form" novalidate>
       <div class="two"><label><span class="cap">Name</span><input id="f-name" name="name" autocomplete="name" required></label>
@@ -395,7 +396,7 @@ input:focus,textarea:focus{border-color:#4a4744}
       <label><span class="cap">Message</span><textarea id="f-msg" name="message" required></textarea></label>
       <div class="foot">
         <button class="send" type="submit"><span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></span>Send</button>
-        <p class="mailline">or <a href="mailto:francescocoia365@gmail.com">francescocoia365@gmail.com</a> <button type="button" class="copy" id="copy">Copy</button></p>
+        <p class="mailline">or <a href="mailto:francescocoia365@gmail.com" data-umami-event="Mail link">francescocoia365@gmail.com</a> <button type="button" class="copy" id="copy">Copy</button></p>
       </div>
       <p class="note" id="note" aria-live="polite"></p>
     </form>
@@ -409,6 +410,7 @@ input:focus,textarea:focus{border-color:#4a4744}
 
 <script>
 {
+const tk=(n,d)=>{try{window.umami&&umami.track(n,d)}catch(e){}};let tkLast=null;
 const AUDIO={"t01": "t01.mp3", "t02": "t02.mp3", "t03": "t03.mp3", "t04": "t04.mp3", "t05": "t05.mp3", "t06": "t06.mp3", "t07": "t07.mp3", "t08": "t08.mp3", "t09": "t09.mp3", "t10": "t10.mp3", "t11": "t11.mp3", "t12": "t12.mp3", "t13": "t13.mp3", "t14": "t14.mp3"};   // track id -> file in audio/
 const TRACKS=[["t04", "Bella ci dormi", "2:40", "Jusqu’au prochain souffle · short film, 2025"], ["t08", "Echoes of the True Self", "1:59", "Murdrum · short film by Job Gailey, 2025"], ["t01", "A Home That No Longer Remembers Us", "2:47", "Unreleased · from a project in development"], ["t05", "Breath Out", "2:22", "Façade · short film by Pratham Mudbidri, 2023"], ["t02", "The Weight of an Invisible Shadow", "4:22", "Luce e Ombra, I · contemporary dance, 2026"], ["t14", "Where the Light Begins to Fracture", "4:33", "Luce e Ombra, IV · contemporary dance, 2026"], ["t03", "Bodies Out of Focus", "2:56", "Luce e Ombra, II · contemporary dance, 2026"], ["t13", "An Architecture of Echoes", "3:44", "Luce e Ombra, III · contemporary dance, 2026"], ["t06", "Everything Returns, Slightly Changed", "4:14", "Luce e Ombra, VI · with Andrea Pagliara"], ["t07", "What Remains Between Us", "4:37", "Luce e Ombra, V · with Andrea Pagliara"], ["t09", "p e r d e r e", "2:29", "Birthday · short film by Imogen Walker, 2023"], ["t10", "On The Ring", "3:00", "Nino Benvenuti · documentary, Rai Storia · with Andrea Pagliara"], ["t11", "Alfredo", "1:30", "Alfredo · short film by Sveva Salimene · with Andrea Pagliara"], ["t12", "Vicini Vicini", "1:11", "Sicilia Express · Netflix series · theme by Paolo Buonvino, arranged"]];
 const WORKS=[["2026", [["Le Cose Non Dette", "Film", "Gabriele Muccino", "Electronic programming, assistant to composer", "le-cose-non-dette.jpg", 0.667], ["Dio Ride", "Film", "Giovanni Veronesi", "Electronic programming, assistant to composer", "dio-ride.jpg", 0.667], ["Starmaker", "Film", "Joshua David Pivato", "Composer", "starmaker.jpg", 0.667], ["Luce e Ombra", "Dance", "Accademia Nazionale di Danza", "Composer", "luce-e-ombra.jpg", 0.667], ["Frida", "Opera musical", "", "Arranger, orchestrator", "frida.jpg", 0.667], ["Rat Poison", "Short", "Mina Kaya", "Composer", "rat-poison.jpg", 0.667]]], ["2025", [["Sicilia Express", "Series", "Netflix", "Arranger, electronic programming, assistant to composer", "sicilia-express.jpg", 0.667], ["Nino Benvenuti", "Documentary", "Rai Storia", "Additional music, guitars", "nino-benvenuti.jpg", 0.667], ["Van Gogh Café", "Opera musical", "", "Arranger, orchestrator", "van-gogh-cafe.jpg", 0.667], ["Alfredo", "Short", "Sveva Salimene", "Composer", "alfredo.jpg", 0.667], ["Murdrum", "Short", "Job Gailey", "Composer", "murdrum.jpg", 0.667], ["Jusqu’au prochain souffle", "Short", "", "Composer", "jusqu-au-prochain-souffle.jpg", 0.667]]], ["2024", [["Il Vajont di Tutti", "Opera musical", "", "Arranger, orchestrator", "il-vajont-di-tutti.jpg", 0.667], ["Cicatrix", "Short", "U. Güven, T. D. Ipek, D. S. Bilgiç", "Composer", "cicatrix.jpg", 0.667], ["The Chitin Hunter", "Short", "Pratham Mudbidri", "Composer", "the-chitin-hunter.jpg", 0.667]]], ["2023", [["Maintenance", "Short", "Pablo Aguilar", "Composer", "maintenance.jpg", 0.667], ["Birthday", "Short", "Imogen Walker", "Composer", "birthday.jpg", 0.667], ["Façade", "Short", "Pratham Mudbidri", "Composer", "facade.jpg", 0.667], ["Bête Noir", "Short", "Jeremy Brondoni", "Composer", "bete-noir.jpg", 0.667], ["Contractors", "Short", "Michael Payne", "Composer", "contractors.jpg", 0.667], ["Burn To Be Reborn", "Short", "Irene Loreti, Carla Mariani", "Composer", "burn-to-be-reborn.jpg", 0.667, "2022"]]]];
@@ -428,6 +430,7 @@ let curId=null;
 const allRows=()=>[...pl.querySelectorAll('.tr'),...pl2.querySelectorAll('.tr')];const rowOf=id=>allRows().find(r=>r.dataset.id===id);
 function sync(){allRows().forEach(r=>{const on=r.dataset.id===curId;r.classList.toggle('on',on);r.querySelector('button').innerHTML=on&&!au.paused?PAUSE:PLAY});np.classList.toggle('on',!!curId&&!au.paused)}
 async function play(id){if(!AUDIO[id])return;if(curId===id&&!au.paused){au.pause();return}
+  if(tkLast!==id){tkLast=id;const T=TRACKS.find(x=>x[0]===id);tk('Play track',{track:T?T[1]:id})}
   if(curId!==id){au.src='../audio/'+AUDIO[id];curId=id;const t=rowOf(id).dataset.t;npT.textContent=t;try{if('mediaSession' in navigator)navigator.mediaSession.metadata=new MediaMetadata({title:t,artist:'Francesco Coia'})}catch(e){}}
   try{await au.play()}catch(e){}}
 const onPl=e=>{const r=e.target.closest('.tr');if(!r||r.classList.contains('off'))return;const bar=e.target.closest('.bar');if(bar&&r.dataset.id===curId&&au.duration){const b=bar.getBoundingClientRect();au.currentTime=Math.max(0,Math.min(1,(e.clientX-b.left)/b.width))*au.duration;return}play(r.dataset.id)};pl.addEventListener('click',onPl);pl2.addEventListener('click',onPl);
@@ -445,7 +448,7 @@ let wi=-1,wl=0;
 wsel.innerHTML=VIDEOS.map(([id,t],i)=>`<button type="button" role="tab" data-i="${i}" aria-selected="false" aria-label="${esc(t)}" style="--t:url(https://i.ytimg.com/vi/${id}/mqdefault.jpg)"><b>0${i+1}</b>${esc(t)}<i></i></button>`).join('');
 function pick(i){if(i===wi)return;wi=i;const [id,t]=VIDEOS[i];wtitle.textContent=t;wsel.querySelectorAll('button').forEach((b,k)=>b.setAttribute('aria-selected',String(k===i)));
   wl^=1;const im=wbg.children[wl];im.onerror=()=>{im.onerror=null;im.src=`https://i.ytimg.com/vi/${id}/hqdefault.jpg`};im.onload=()=>{if(im.naturalWidth<200&&im.onerror)im.onerror()};im.src=`https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;im.classList.add('on');wbg.children[wl^1].classList.remove('on')}
-function playVid(){const [id,t]=VIDEOS[wi];au.pause();lbFr.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1" title="${esc(t)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;lb.classList.add('on')}
+function playVid(){const [id,t]=VIDEOS[wi];tk('Open video',{video:t});au.pause();lbFr.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1" title="${esc(t)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;lb.classList.add('on')}
 ['pointerover','focusin','click'].forEach(ev=>wsel.addEventListener(ev,e=>{const b=e.target.closest('button');if(!b)return;if(ev==='pointerover'&&e.pointerType!=='mouse')return;pick(+b.dataset.i)}));
 document.getElementById('wplay').addEventListener('click',playVid);
 let wdown=0;wbg.addEventListener('pointerdown',e=>{wdown=e.clientX});wbg.addEventListener('click',e=>{if(Math.abs(e.clientX-wdown)<6)playVid()});
@@ -482,7 +485,7 @@ function goTo(x){if(pageQ.matches)track.scrollTo({left:x,behavior:still.matches?
 document.getElementById('go-contact').addEventListener('click',e=>{e.preventDefault();goTo(maxX())});
 const pb=document.getElementById('progbar');let pdrag=false;const seek=e=>{const r=pb.getBoundingClientRect();const x=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*maxX();if(pageQ.matches)track.scrollTo({left:x,behavior:'instant'});else{stopGlide();track.scrollLeft=x;target=x}};
 pb.addEventListener('pointerdown',e=>{pdrag=true;pb.setPointerCapture(e.pointerId);if(pageQ.matches)track.style.scrollSnapType='none';seek(e)});pb.addEventListener('pointermove',e=>{if(pdrag)seek(e)});const pend=()=>{if(!pdrag)return;pdrag=false;track.style.scrollSnapType=''};pb.addEventListener('pointerup',pend);pb.addEventListener('pointercancel',pend);
-document.getElementById('copy').addEventListener('click',async e=>{try{await navigator.clipboard.writeText('francescocoia365@gmail.com');e.target.textContent='Copied'}catch(_){e.target.textContent='Select it'}});
+document.getElementById('copy').addEventListener('click',async e=>{tk('Copy mail');try{await navigator.clipboard.writeText('francescocoia365@gmail.com');e.target.textContent='Copied'}catch(_){e.target.textContent='Select it'}});
 
 // ---------- cursor label ----------
 const cur=document.getElementById('cur');
@@ -492,6 +495,7 @@ if(matchMedia('(pointer:fine)').matches)addEventListener('pointermove',e=>{cur.s
 document.getElementById('form').addEventListener('submit',e=>{e.preventDefault();const n=document.getElementById('f-name').value.trim(),pj=document.getElementById('f-proj').value.trim(),m=document.getElementById('f-msg').value.trim(),note=document.getElementById('note');
   if(!n||!m){note.textContent='Please add your name and a message.';return}
   note.textContent='Opening your email app…';
+  tk('Contact form');
   location.href=`mailto:francescocoia365@gmail.com?subject=${encodeURIComponent((pj?pj+' — ':'')+'from '+n)}&body=${encodeURIComponent(m+'\n\n'+n+(pj?'\nProject: '+pj:''))}`});
 }
 </script>
