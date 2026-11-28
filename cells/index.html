@@ -31,6 +31,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 .intro p{margin-top:clamp(16px,2.4vh,26px);max-width:34ch;font-size:clamp(14px,1.25vw,17px);line-height:1.5;color:var(--mute)}
 .foot{position:fixed;z-index:10;left:var(--padX);right:var(--padX);bottom:max(14px,env(safe-area-inset-bottom));pointer-events:none}
 .foot .row{display:flex;justify-content:space-between;align-items:baseline;font:300 9.5px var(--disp);letter-spacing:.2em;text-transform:uppercase;color:var(--mute);margin-bottom:9px;min-height:12px}
+.foot .row.no{margin-bottom:5px;opacity:.8}
 .foot .row b{font-weight:300;color:var(--ink)}
 .line{height:1.5px;background:rgba(236,233,228,.2);border-radius:2px;overflow:hidden}
 .line i{display:block;height:100%;background:var(--ink);transform-origin:0 50%;transform:scaleX(0)}
@@ -40,19 +41,36 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 <body>
 <canvas id="cv" aria-label="Drawing surface: each line you draw becomes a musical pattern"></canvas>
 <header class="top"><a href="../">Francesco Coia</a><div class="acts"><button type="button" id="undo" hidden>Undo</button><button type="button" id="clear" hidden>Clear</button></div></header>
-<div class="intro" id="intro"><small>Write with me</small><h1>Draw<br>a line</h1><p>Your line becomes a pattern. Height is pitch, length is how many notes, a quick hand plays more of them. Draw another and my rules make them fit.</p><p class="no">No AI. Nothing here is generated: only rules and chance, shaped by my taste.</p></div>
-<footer class="foot"><div class="row"><span>No AI · rules and chance</span><b><span id="count"></span><span id="chord"></span></b></div><div class="line"><i id="bar"></i></div></footer>
+<div class="intro" id="intro"><small>Write with me</small><h1>Draw<br>a line</h1><p>Your line becomes a pattern. Height is pitch, length is how many notes, a quick hand plays more of them. Low notes are large and slow, high ones small and quick; triangles move in threes. At first each line is on its own. At four lines the bass comes in, and little by little they all start to follow the harmony.</p><p class="no">No AI. Nothing here is generated: only rules and chance, shaped by my taste.</p></div>
+<footer class="foot"><div class="row no"><span>No AI · rules and chance</span></div><div class="row"><span id="prog"></span><b><span id="count"></span><span id="chord"></span></b></div><div class="line"><i id="bar"></i></div></footer>
 <script>
 /* Cells: the rules of the CELLULE engine in residuo (Generative.h), drawn by hand.
    A line = a cell: a short figure of scale degrees from an anchor note, with its own length and step. */
 const REST=-999, MAXCELLS=6, MAXLEN=9;
 const SCALE=[0,2,4,5,7,9,11];                     // C major / A minor: the whole progression lives in it
 const STEP=[2,1,.5,1/3,.25];                      // beats per step: 1/2, 1/4, 1/8, 1/8T, 1/16
-const BPM=72, BEAT=60/BPM, BARBEATS=4, EVOLVE_BARS=2, SWELL_IN=2, SWELL_OUT=3;
-// "Inverno a Giava" (residuo, ChordLoop.h): Fmaj7 G6 Em7 Am9 Dm9 G7sus4 Cmaj7/E A7sus4
-const CHORDS=[
- {n:'Fmaj7', bass:5, pcs:[5,9,0,4]},{n:'G6', bass:7, pcs:[7,11,2,4]},{n:'Em7', bass:4, pcs:[4,7,11,2]},{n:'Am9', bass:9, pcs:[9,0,4,7,11]},
- {n:'Dm9', bass:2, pcs:[2,5,9,0,4]},{n:'G7sus4', bass:7, pcs:[7,0,2,5]},{n:'Cmaj7/E', bass:4, pcs:[0,4,7,11]},{n:'A7sus4', bass:9, pcs:[9,2,4,7]}];
+const BPM=66, BEAT=60/BPM, BARBEATS=4, BAR=BARBEATS*BEAT, EVOLVE_BARS=2, SWELL_IN=2, SWELL_OUT=3;
+const BASS_AT=4, FOLLOW_BARS=10, PAD_AFTER=6;      // the bass joins at four lines; the lines learn the harmony over ten bars; the pad comes six bars after the bass
+// the Sakamoto shelf of chord loops in residuo (ChordLoop.h). One is picked at every start and every clear.
+const PROGS=[
+ ['Winter in Java','Fmaj7 G6 Em7 Am9 Dm9 G7sus4 Cmaj7/E A7sus4'],['Water','Cmaj7 Em7/B Am7 Fmaj7#11 Dm9 Cadd9/E Fmaj7 Gsus4'],
+ ['Flow','Fmaj7/A G/B Cadd9 Am7 Dm7 Em7 Fmaj9 G6'],['Distant Empire','Am(add9) Fmaj7#11/A Dm9 E7sus4*0.5 E7b9*0.5'],
+ ['White Pedal','Cmaj7 Abmaj7/C Fmaj7/C Fm6/C'],['Late Snow','Dm9 G13 Em7 A7b13 Dm9 Fm6 Cmaj7/E Ebdim7'],
+ ['Dorian Tokyo','Am7 D9/A Am7 Cmaj7/G Fmaj7#11 Em7 Dm9 E7sus4'],['After the Rain','Cadd9 Bbmaj7#11/C Abmaj7#11 G7sus4'],
+ ['Night Water','Fmaj7 Em7 Dm7 Cmaj7/E Fmaj7 G/F Em7 Am9'],['Piano in the Snow','Am9 Gsus4/A Fmaj7/A Em7/A'],
+ ['Descent','Dm9 Dm9/C Bm7b5 Bbmaj7#11 Am7 Abmaj7#11 G13 G7b9'],['Solitude','Am Am(maj7)/G# Fmaj7/A Fm6/Ab Cmaj7/G F#m7b5 Fmaj7 E7sus4'],
+ ['Departure','Fmaj7 G6 Em7 Am7 Dm7 Em7 Fmaj7 G6'],['Lost Time','Cmaj7 C7 Fmaj7 Fm6 Em7 Ebdim7 Dm7 G7sus4']];
+const QUAL={'maj7#11':[0,4,7,11,6],'maj7':[0,4,7,11],'maj9':[0,4,7,11,2],'m(add9)':[0,3,7,2],'m(maj7)':[0,3,7,11],'m7b5':[0,3,6,10],'m9':[0,3,7,10,2],'m7':[0,3,7,10],'m6':[0,3,7,9],'m':[0,3,7],
+ 'dim7':[0,3,6,9],'7sus4':[0,5,7,10],'sus4':[0,5,7],'add9':[0,4,7,2],'7b13':[0,4,7,10,8],'7b9':[0,4,7,10,1],'13':[0,4,7,10,2,9],'9':[0,4,7,10,2],'7':[0,4,7,10],'6':[0,4,7,9],'':[0,4,7]};
+const PCN={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+const pcOf=t=>(PCN[t[0]]+(t[1]==='#'?1:t[1]==='b'?-1:0)+12)%12;
+function parseChord(tok){let bars=1;const m=tok.split('*');if(m[1])bars=parseFloat(m[1]);const [head,slash]=m[0].split('/');
+  const rl=(head[1]==='#'||head[1]==='b')?2:1,root=pcOf(head.slice(0,rl)),q=head.slice(rl);
+  return{n:m[0],bars,root,bass:slash?pcOf(slash):root,pcs:(QUAL[q]||QUAL['']).map(i=>(root+i)%12)}}
+let prog=null,CHORDS=[],LOOPBARS=8,progIdx=-1;
+function pickProg(){let i;do{i=Math.floor(Math.random()*PROGS.length)}while(i===progIdx&&PROGS.length>1);progIdx=i;prog=PROGS[i];CHORDS=prog[1].split(' ').map(parseChord);
+  let b=0;for(const c of CHORDS){c.at=b;b+=c.bars}LOOPBARS=b}
+pickProg();
 const LOW=41, HIGH=88;                            // the page from bottom to top, in MIDI notes
 
 // scale helpers: a "degree index" counts scale notes from C-1
@@ -65,11 +83,14 @@ function rngOf(seed){let s=seed>>>0||1;return()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s
 
 const cv=document.getElementById('cv'),g=cv.getContext('2d');
 let W=0,H=0,DPR=1,padT=0,padB=0;
-function size(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);g.setTransform(DPR,0,0,DPR,0,0);padT=Math.max(70,H*.11);padB=Math.max(64,H*.1)}
+function size(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);g.setTransform(DPR,0,0,DPR,0,0);padT=Math.max(70,H*.11);padB=Math.max(86,H*.11)}
 addEventListener('resize',size);size();
 const yOfIdx=i=>padT+(1-(i-IDX_LOW)/(IDX_HIGH-IDX_LOW))*(H-padT-padB);
 const idxOfY=y=>Math.round(IDX_LOW+(1-(y-padT)/(H-padT-padB))*(IDX_HIGH-IDX_LOW));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+// six pigments on a dark ground
+const PAL=[[226,74,44],[242,178,48],[52,106,224],[30,164,140],[176,104,214],[236,233,228]];
+const rgba=(c,a)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
 let cells=[],serial=0,history=[];
 
@@ -129,7 +150,8 @@ function cellFromStroke(pts){
   // never thinner than half of what was drawn
   {const want=Math.ceil(c.len/2);let have=c.deg.filter(d=>d!==REST).length;for(let i=1;i<c.len&&have<want;i++)if(c.deg[i]===REST){c.deg[i]=drawn[i];have++}applyRules(c)}
   c.activeLen=Math.min(c.len,2+(rnd()<.5?1:0));   // additive: it starts short and grows
-  c.flash=new Array(MAXLEN).fill(0);
+  c.flash=new Array(MAXLEN).fill(0);c.melt=new Array(MAXLEN).fill(0);
+  {const used=cells.filter(o=>!o.dying).map(o=>o.slot);let sl=0;while(used.includes(sl))sl++;c.slot=sl%PAL.length}
   return c;
 }
 
@@ -153,83 +175,98 @@ function evolveCell(c){
 function evolve(){const alive=cells.filter(c=>!c.dying&&c.fade>.5);if(!alive.length)return;
   for(const c of alive)if(Math.random()<.75)evolveCell(c);evolveCell(alive[Math.floor(Math.random()*alive.length)])}
 
-/* ---- sound: small soft plucks, a quiet bass under them ---- */
-let ac=null,out=null,wet=null,t0=0,started=false;
+/* ---- sound: my soft piano (recorded and cut for residuo), a quiet bass, a slow pad ---- */
+let ac=null,out=null,wet=null,t0=0,started=false;const SMP=[37,41,44,47,50,53,57,62,65,68,71,74,77,81],buf={};
 function audio(){
   if(ac){if(ac.state!=='running')ac.resume();return}
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
   ac=new AC({latencyHint:'interactive'});
-  const comp=ac.createDynamicsCompressor();comp.threshold.value=-16;comp.knee.value=18;comp.ratio.value=3;comp.attack.value=.01;comp.release.value=.25;
-  const master=ac.createGain();master.gain.value=.9;comp.connect(master).connect(ac.destination);
-  out=ac.createGain();out.gain.value=1;out.connect(comp);
-  // one soft echo, a short room: not much of either
-  const dl=ac.createDelay(2),fb=ac.createGain(),lp=ac.createBiquadFilter(),dw=ac.createGain();dl.delayTime.value=BEAT*.75;fb.gain.value=.3;lp.type='lowpass';lp.frequency.value=2200;dw.gain.value=.22;
-  wet=ac.createGain();wet.gain.value=1;wet.connect(dl);dl.connect(lp).connect(fb).connect(dl);lp.connect(dw).connect(comp);
-  const len=Math.floor(ac.sampleRate*1.6),ir=ac.createBuffer(2,len,ac.sampleRate);
-  for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);let lpv=0;for(let i=0;i<len;i++){const e=Math.pow(1-i/len,2.6);lpv+=((Math.random()*2-1)-lpv)*.35;d[i]=lpv*e}}
-  const rv=ac.createConvolver(),rw=ac.createGain();rv.buffer=ir;rw.gain.value=.16;wet.connect(rv).connect(rw).connect(comp);
+  const comp=ac.createDynamicsCompressor();comp.threshold.value=-18;comp.knee.value=20;comp.ratio.value=2.5;comp.attack.value=.02;comp.release.value=.3;
+  const master=ac.createGain();master.gain.value=.95;comp.connect(master).connect(ac.destination);
+  out=ac.createGain();out.connect(comp);
+  const dl=ac.createDelay(2),fb=ac.createGain(),lp=ac.createBiquadFilter(),dw=ac.createGain();dl.delayTime.value=BEAT*.75;fb.gain.value=.34;lp.type='lowpass';lp.frequency.value=1500;dw.gain.value=.16;
+  wet=ac.createGain();wet.connect(dl);dl.connect(lp).connect(fb).connect(dl);lp.connect(dw).connect(comp);
+  const len=Math.floor(ac.sampleRate*3.4),ir=ac.createBuffer(2,len,ac.sampleRate);
+  for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);let v=0;for(let i=0;i<len;i++){const e=Math.pow(1-i/len,3.2)*Math.min(1,i/(ac.sampleRate*.03));v+=((Math.random()*2-1)-v)*.16;d[i]=v*e*1.6}}
+  const rv=ac.createConvolver(),rw=ac.createGain();rv.buffer=ir;rw.gain.value=.3;wet.connect(rv).connect(rw).connect(comp);
   t0=ac.currentTime+.12;nextBar=0;started=true;
+  for(const n of SMP)fetch('p/'+n+'.mp3').then(r=>r.arrayBuffer()).then(a=>new Promise((ok,no)=>ac.decodeAudioData(a,ok,no))).then(b=>{buf[n]=b}).catch(()=>{});
 }
 const hz=n=>440*Math.pow(2,(n-69)/12);
-function pluck(note,when,vel,dur,pan){
-  const f=hz(note),o=ac.createOscillator(),o2=ac.createOscillator(),gn=ac.createGain(),g2=ac.createGain(),lp=ac.createBiquadFilter();
-  o.type='triangle';o.frequency.value=f;o2.type='sine';o2.frequency.value=f*2.001;
-  lp.type='lowpass';lp.Q.value=.4;lp.frequency.setValueAtTime(Math.min(9000,f*5+900*vel),when);lp.frequency.exponentialRampToValueAtTime(Math.max(300,f*1.4),when+Math.min(1.2,dur*1.6));
-  const peak=.2*vel*Math.min(1,Math.pow(330/f,.35)+.25),rel=Math.max(.5,Math.min(2.6,dur*1.9));
-  gn.gain.setValueAtTime(0,when);gn.gain.linearRampToValueAtTime(peak,when+.006);gn.gain.exponentialRampToValueAtTime(.0001,when+rel);
-  g2.gain.setValueAtTime(.22,when);g2.gain.exponentialRampToValueAtTime(.001,when+rel*.35);
-  o.connect(lp);o2.connect(g2).connect(lp);lp.connect(gn);
-  let node=gn;if(ac.createStereoPanner){const p=ac.createStereoPanner();p.pan.value=pan;gn.connect(p);node=p}
-  node.connect(out);node.connect(wet);o.start(when);o2.start(when);o.stop(when+rel+.05);o2.stop(when+rel+.05);
+const nearest=n=>{let best=null,bd=99;for(const k of SMP){if(!buf[k])continue;const d=Math.abs(k-n);if(d<bd){bd=d;best=k}}return best};
+function voice(note,when,gainv,opt={}){                      // one piano note; opt: attack, hold, release, lp, offset, pan
+  const k=nearest(note),atk=opt.attack||.004,hold=opt.hold||1.2,rel=opt.release||2.2;
+  const gn=ac.createGain(),lp=ac.createBiquadFilter();lp.type='lowpass';lp.Q.value=.3;lp.frequency.value=opt.lp||2600;
+  gn.gain.setValueAtTime(0,when);gn.gain.linearRampToValueAtTime(gainv,when+atk);gn.gain.setValueAtTime(gainv,when+atk+hold);gn.gain.linearRampToValueAtTime(0,when+atk+hold+rel);
+  let src;
+  if(k!==null){src=ac.createBufferSource();src.buffer=buf[k];src.playbackRate.value=Math.pow(2,(note-k)/12);src.connect(lp)}
+  else{src=ac.createOscillator();src.type='sine';src.frequency.value=hz(note);const e=ac.createGain();e.gain.setValueAtTime(.5,when);e.gain.exponentialRampToValueAtTime(.001,when+Math.max(.8,hold+rel*.5));src.connect(e).connect(lp)}
+  lp.connect(gn);let node=gn;if(ac.createStereoPanner){const p=ac.createStereoPanner();p.pan.value=opt.pan||0;gn.connect(p);node=p}
+  node.connect(out);if(opt.send!==0){const sd=ac.createGain();sd.gain.value=opt.send===undefined?1:opt.send;node.connect(sd).connect(wet)}
+  if(k!==null)src.start(when,opt.offset||0);else src.start(when);src.stop(when+atk+hold+rel+.1);
 }
-function bass(ch,when,dur){
-  const n=36+ch.bass+(ch.bass<4?12:0);
-  for(const [note,lv,type] of [[n,.11,'sine'],[n+7,.035,'sine'],[n+12,.03,'triangle']]){
-    const o=ac.createOscillator(),gn=ac.createGain();o.type=type;o.frequency.value=hz(note);
-    gn.gain.setValueAtTime(0,when);gn.gain.linearRampToValueAtTime(lv,when+.5);gn.gain.setValueAtTime(lv,when+dur-.5);gn.gain.linearRampToValueAtTime(0,when+dur+.9);
-    o.connect(gn).connect(out);o.start(when);o.stop(when+dur+1)}
-}
+const pluck=(note,when,vel,dur,pan)=>voice(note,when,.5*vel,{hold:Math.max(.5,dur*1.6),release:2.6,lp:900+2600*vel,pan});
+function bass(ch,when,dur,lv){
+  const n=36+ch.bass+(ch.bass<5?12:0);                       // E2 .. Eb3
+  voice(n,when,.5*lv,{attack:.06,hold:dur*.8,release:2.4,lp:700,send:.4});
+  const o=ac.createOscillator(),gn=ac.createGain();o.type='sine';o.frequency.value=hz(n-12<34?n:n-12);
+  gn.gain.setValueAtTime(0,when);gn.gain.linearRampToValueAtTime(.085*lv,when+.9);gn.gain.setValueAtTime(.085*lv,when+dur-.3);gn.gain.linearRampToValueAtTime(0,when+dur+1.4);
+  o.connect(gn).connect(out);o.start(when);o.stop(when+dur+1.5)}
+function pad(ch,when,dur,lv){                                // the same piano without its attack, slow in and slow out
+  const tones=ch.pcs.slice(0,4).map((pc,i)=>{let n=55+((pc-55%12+12)%12);if(i===0&&n>62)n-=12;return n});
+  tones.forEach((n,i)=>voice(n,when+i*.18,.16*lv,{attack:1.8,hold:Math.max(.2,dur-1.6),release:3.2,lp:1100,offset:.22,pan:(i-1.5)*.3,send:1.3}))}
 
 /* ---- the clock ---- */
-let nextBar=0,barsDone=0;const queue=[];
-const beatAt=t=>(t-t0)/BEAT, chordAtBeat=b=>CHORDS[((Math.floor(b/BARBEATS)%CHORDS.length)+CHORDS.length)%CHORDS.length];
-function fit(c,d,ch,when){
-  let idx=c.base+d,n=noteOfIdx(idx);
-  // the chord leads: a note one semitone above a chord tone gives way
-  for(let t=0;t<2;t++){const pc=((n%12)+12)%12;if(ch.pcs.some(p=>((pc-p+12)%12)===1)&&!ch.pcs.includes(pc)){idx--;n=noteOfIdx(idx)}else break}
-  // between cells: no tight seconds under C5
+let nextBar=0;const queue=[];
+let harmBar=-1,follow=0;                                      // the bar at which the harmony joined, and how much the lines listen to it (0..1)
+const barAt=t=>(t-t0)/BAR;
+function chordAt(t){if(harmBar<0)return null;const b=barAt(t)-harmBar;if(b<0)return null;const x=((b%LOOPBARS)+LOOPBARS)%LOOPBARS;let c=CHORDS[0];for(const k of CHORDS)if(k.at<=x+1e-6)c=k;return c}
+function fit(c,d,step,when){
+  let idx=c.base+d,n=noteOfIdx(idx);const ch=chordAt(when);
+  // at first a line is on its own; then its first note listens, then the middle one, then all of it
+  const listens=ch&&(follow>=.95||(follow>=.6&&step===(c.len>>1))||(follow>=.3&&step===0)||(follow>=.6&&step===0));
+  if(listens)for(let t=0;t<3;t++){const pc=((n%12)+12)%12;if(ch.pcs.includes(pc))break;
+    if(ch.pcs.includes((pc+11)%12)){idx--;n=noteOfIdx(idx)}            // a semitone above a chord note: step down
+    else if(ch.pcs.includes((pc+1)%12)){idx++;n=noteOfIdx(idx)}        // a semitone below: step up
+    else break}
+  // between lines: no tight seconds under C5
   for(let t=0;t<2;t++){let clash=false;for(const o of cells){if(o===c||o.lastUntil<when)continue;const iv=Math.abs(o.lastNote-n);if((iv===1||iv===2)&&n<72&&o.lastNote<72){clash=true;break}}
     if(clash){idx+=1;n=noteOfIdx(idx)}else break}
   return n}
 function schedule(){
   if(!started||!ac)return;
-  const horizon=ac.currentTime+.14;
-  while(t0+nextBar*BARBEATS*BEAT<horizon){
-    const when=t0+nextBar*BARBEATS*BEAT;
-    if(cells.some(c=>!c.dying))bass(CHORDS[nextBar%CHORDS.length],Math.max(when,ac.currentTime+.01),BARBEATS*BEAT);
+  const horizon=ac.currentTime+.14,alive=cells.filter(c=>!c.dying).length;
+  while(t0+nextBar*BAR<horizon){
+    const when=t0+nextBar*BAR;
+    if(harmBar<0&&alive>=BASS_AT)harmBar=nextBar;                       // four lines: the bass comes in on this bar
+    if(harmBar>=0&&alive===0)harmBar=-1;
+    if(harmBar>=0){const hb=nextBar-harmBar,x=((hb%LOOPBARS)+LOOPBARS)%LOOPBARS,lv=Math.min(1,.4+hb/8)*(alive>=2?1:.5);
+      for(const ch of CHORDS)if(ch.at>=x-1e-6&&ch.at<x+1-1e-6){const tw=Math.max(when+(ch.at-x)*BAR,ac.currentTime+.01),du=ch.bars*BAR;
+        bass(ch,tw,du,lv);if(hb>=PAD_AFTER)pad(ch,tw,du,Math.min(1,(hb-PAD_AFTER+1)/6))}}
     if(nextBar>0&&nextBar%EVOLVE_BARS===0)queue.push({t:when,evolve:true});
     nextBar++}
+  follow=harmBar<0?0:clamp((barAt(ac.currentTime)-harmBar)/FOLLOW_BARS,0,1);
   for(const c of cells){
     const sb=STEP[c.code]*BEAT;
     if(c.born===null){c.born=Math.ceil((ac.currentTime+.03-t0)/sb)*sb+t0;c.k=0}
     while(c.born+c.k*sb<horizon){
       const when=c.born+c.k*sb,al=Math.max(1,c.activeLen),step=(c.k+c.phase)%al,d=c.deg[step];
-      const age=(when-c.born)/(BARBEATS*BEAT),fin=Math.min(1,.25+age/SWELL_IN*.75),fout=c.dying?Math.max(0,1-(when-c.dieAt)/(SWELL_OUT*BARBEATS*BEAT)):1;
+      const age=(when-c.born)/BAR,fin=Math.min(1,.3+age/SWELL_IN*.7),fout=c.dying?Math.max(0,1-(when-c.dieAt)/(SWELL_OUT*BAR)):1;
       if(d!==REST&&fout>0&&when>=ac.currentTime-.01){
-        const ch=chordAtBeat(beatAt(when)),n=fit(c,d,ch,when),gate=(n<48?1.6:1)*.75;
-        const vel=clamp((.45+.55*c.energy)*c.accent[step]*fin*fout,0,1);
+        const n=fit(c,d,step,when),gate=(n<48?1.6:1)*.75;
+        const vel=clamp((.3+.5*c.energy)*c.accent[step]*fin*fout,0,1);
         pluck(n,when,vel,sb*gate,clamp((c.x[step]/W-.5)*1.2,-.7,.7));
         c.lastNote=n;c.lastUntil=when+sb*gate;
         queue.push({t:when,c,step,vel})}
       c.k++}
   }
-  cells=cells.filter(c=>!(c.dying&&ac.currentTime>c.dieAt+SWELL_OUT*BARBEATS*BEAT+1));
+  cells=cells.filter(c=>!(c.dying&&ac.currentTime>c.dieAt+SWELL_OUT*BAR+1));
 }
 setInterval(schedule,25);
 
 /* ---- drawing ---- */
-let cur=null;const intro=document.getElementById('intro'),undoB=document.getElementById('undo'),clearB=document.getElementById('clear'),countEl=document.getElementById('count'),chordEl=document.getElementById('chord'),barEl=document.getElementById('bar');
-function ui(){const n=cells.filter(c=>!c.dying).length;undoB.hidden=clearB.hidden=n===0;countEl.textContent=n?`${n}/${MAXCELLS} · `:''}
+let cur=null;const intro=document.getElementById('intro'),undoB=document.getElementById('undo'),clearB=document.getElementById('clear'),countEl=document.getElementById('count'),progEl=document.getElementById('prog'),chordEl=document.getElementById('chord'),barEl=document.getElementById('bar');
+function ui(){const n=cells.filter(c=>!c.dying).length;undoB.hidden=clearB.hidden=n===0;countEl.textContent=n?`${n}/${MAXCELLS}`:''}
 cv.addEventListener('pointerdown',e=>{audio();cv.setPointerCapture(e.pointerId);cur=[{x:e.clientX,y:e.clientY,t:performance.now()}]});
 cv.addEventListener('pointermove',e=>{if(!cur)return;const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];for(const m of evs.length?evs:[e]){const l=cur[cur.length-1];if(Math.hypot(m.clientX-l.x,m.clientY-l.y)>2.5)cur.push({x:m.clientX,y:m.clientY,t:performance.now()})}});
 function end(){if(!cur)return;const pts=cur;cur=null;audio();
@@ -241,9 +278,9 @@ function end(){if(!cur)return;const pts=cur;cur=null;audio();
   try{window.umami&&umami.track('Cell drawn',{cells:cells.filter(c=>!c.dying).length})}catch(_){}}
 cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
 function smooth(p){if(p.length<3)return p;const o=[p[0]];for(let i=1;i<p.length-1;i++)o.push({x:(p[i-1].x+2*p[i].x+p[i+1].x)/4,y:(p[i-1].y+2*p[i].y+p[i+1].y)/4,t:p[i].t});o.push(p[p.length-1]);return o}
-function kill(c){if(!c||c.dying)return;c.dying=true;c.dieAt=ac?ac.currentTime-(SWELL_OUT-1)*BARBEATS*BEAT:0}
+function kill(c){if(!c||c.dying)return;c.dying=true;c.dieAt=ac?ac.currentTime-(SWELL_OUT-1)*BAR:0}
 undoB.addEventListener('click',()=>{while(history.length){const id=history.pop(),c=cells.find(x=>x.id===id&&!x.dying);if(c){kill(c);break}}ui()});
-clearB.addEventListener('click',()=>{for(const c of cells)kill(c);history=[];ui()});
+clearB.addEventListener('click',()=>{for(const c of cells)kill(c);history=[];harmBar=-1;pickProg();ui()});
 addEventListener('keydown',e=>{if(e.key==='z'&&(e.metaKey||e.ctrlKey)){e.preventDefault();undoB.click()}});
 document.addEventListener('visibilitychange',()=>{if(ac&&document.hidden)ac.suspend();});
 
@@ -251,28 +288,60 @@ function path(pts){g.beginPath();g.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.l
 function frame(){
   requestAnimationFrame(frame);
   const now=ac?ac.currentTime:0;
-  while(queue.length&&queue[0].t<=now){const q=queue.shift();if(q.evolve)evolve();else if(q.c){q.c.flash[q.step]=1;q.c.last=q.step}}
+  while(queue.length&&queue[0].t<=now){const q=queue.shift();if(q.evolve)evolve();else if(q.c){q.c.flash[q.step]=1;q.c.melt[q.step]=Math.min(1,(q.c.melt[q.step]||0)+.2);q.c.last=q.step}}
   queue.sort((a,b)=>a.t-b.t);
   g.clearRect(0,0,W,H);
   g.lineCap='round';g.lineJoin='round';
-  if(started){const b=beatAt(now),ch=chordAtBeat(Math.max(0,b)),loop=CHORDS.length*BARBEATS;
-    const anyone=cells.some(c=>!c.dying);
-    chordEl.textContent=anyone?ch.n:'';barEl.style.transform=`scaleX(${anyone?((b%loop)+loop)%loop/loop:0})`}
+  {const anyone=cells.filter(c=>!c.dying).length,ch=started?chordAt(now):null;
+    if(ch){const x=(((barAt(now)-harmBar)%LOOPBARS)+LOOPBARS)%LOOPBARS;chordEl.textContent=' · '+ch.n;progEl.textContent=prog[0];barEl.style.transform=`scaleX(${x/LOOPBARS})`}
+    else{chordEl.textContent='';barEl.style.transform='scaleX(0)';progEl.textContent=anyone?(anyone<BASS_AT?`the harmony joins at ${BASS_AT} lines`:prog[0]):''}}
+  // the chord colours the air: one large soft disc that moves with the progression
+  {const ch=started?chordAt(now):null;if(ch){const k=CHORDS.indexOf(ch),bb=barAt(now)-harmBar,x=((bb%LOOPBARS)+LOOPBARS)%LOOPBARS,fr=clamp((x-ch.at)/Math.max(.25,ch.bars)*3,0,1),R=Math.min(W,H)*.62,lv=Math.min(1,bb/6);
+    const field=(k,al)=>{k=((k%CHORDS.length)+CHORDS.length)%CHORDS.length;const c=CHORDS[k],x=W*(.18+.64*((c.root*5)%12)/11),y=H*(.3+.4*((c.root*7)%12)/11),col=PAL[c.root%PAL.length];
+      const gr=g.createRadialGradient(x,y,R*.1,x,y,R);gr.addColorStop(0,rgba(col,.15*al));gr.addColorStop(.7,rgba(col,.05*al));gr.addColorStop(1,rgba(col,0));g.fillStyle=gr;g.fillRect(0,0,W,H)};
+    g.globalAlpha=1;field(k,fr*lv);if(fr<1)field(k-1,(1-fr)*lv)}}
+  const tms=performance.now()/1000;
+  g.globalCompositeOperation='screen';
   for(const c of cells){
-    const age=c.born===null?0:Math.max(0,(now-c.born)/(BARBEATS*BEAT)),fin=Math.min(1,.3+age/SWELL_IN*.7),fout=c.dying?Math.max(0,1-(now-c.dieAt)/(SWELL_OUT*BARBEATS*BEAT)):1,a=fin*fout;
+    const age=c.born===null?0:Math.max(0,(now-c.born)/BAR),fin=Math.min(1,.35+age/SWELL_IN*.65),fout=c.dying?Math.max(0,1-(now-c.dieAt)/(SWELL_OUT*BAR)):1,a=fin*fout;
     if(a<=0)continue;
-    g.globalAlpha=.38*a;g.strokeStyle='#ece9e4';g.lineWidth=1.25;path(c.pts);g.stroke();
-    const al=Math.max(1,c.activeLen);
+    const col=PAL[c.slot%PAL.length],reg=clamp((c.anchor-LOW)/(HIGH-LOW),0,1),big=1-reg,al=Math.max(1,c.activeLen);
+    // the ruler line, the arc, the hairlines: what a line carries with it depends on where it lives
+    g.lineCap='round';
+    const p0=c.pts[0],p1=c.pts[c.pts.length-1],ang=Math.atan2(p1.y-p0.y,p1.x-p0.x);
+    g.globalAlpha=.3*a;g.strokeStyle='#ece9e4';g.lineWidth=1;g.beginPath();
+    const ext=Math.max(W,H)*.28*(.6+.4*c.energy),ra=ang+(c.low?-.5:c.high?.9:.32)*(c.id%2?1:-1);
+    g.moveTo(c.x[0]-Math.cos(ra)*ext,c.y[0]-Math.sin(ra)*ext);g.lineTo(c.x[0]+Math.cos(ra)*ext,c.y[0]+Math.sin(ra)*ext);g.stroke();
+    if(c.low){g.globalAlpha=.5*a;g.strokeStyle=rgba(col,1);g.lineWidth=2.2;const mx=(p0.x+p1.x)/2,my=(p0.y+p1.y)/2,rr=Math.hypot(p1.x-p0.x,p1.y-p0.y)*.62+30;g.beginPath();g.arc(mx,my+rr*.55,rr,Math.PI*1.12,Math.PI*1.88);g.stroke()}
+    if(c.high){g.globalAlpha=.4*a;g.strokeStyle='#ece9e4';g.lineWidth=.8;for(let k=0;k<3;k++){const o=6+k*5;g.beginPath();g.moveTo(p1.x+10+o,p1.y-34-o*.4);g.lineTo(p1.x-26+o,p1.y+30-o*.4);g.stroke()}}
+    // the line itself: a brush with a body, breathing slightly
+    const n=c.pts.length,base=(2.2+big*9)*(.75+.5*c.energy),L=[],Rr=[];
+    for(let i=0;i<n;i++){const u=i/(n-1),p=c.pts[i],q=c.pts[Math.min(n-1,i+1)],o=c.pts[Math.max(0,i-1)];let dx=q.x-o.x,dy=q.y-o.y;const m=Math.hypot(dx,dy)||1;dx/=m;dy/=m;
+      const w=base*(.14+.86*Math.pow(Math.sin(Math.PI*Math.min(1,u*1.08)),.7)),wob=Math.sin(tms*.6+u*5+c.id)*1.6*(.4+big);
+      const px=p.x-dy*wob,py=p.y+dx*wob;L.push([px-dy*w/2,py+dx*w/2]);Rr.push([px+dy*w/2,py-dx*w/2])}
+    g.globalAlpha=.9*a;g.fillStyle=rgba(col,1);g.beginPath();g.moveTo(L[0][0],L[0][1]);for(let i=1;i<n;i++)g.lineTo(L[i][0],L[i][1]);for(let i=n-1;i>=0;i--)g.lineTo(Rr[i][0],Rr[i][1]);g.closePath();g.fill();
+    // the notes: discs for even steps, triangles for triplets; low is large, high is small
+    const r0=5+big*20, tri=c.code===3;
     for(let i=0;i<c.len;i++){
-      const d=c.deg[i],on=i<al,x=c.x[i],y=c.y[i],f=c.flash[i];
-      if(d===REST){g.globalAlpha=(on?.5:.18)*a;g.lineWidth=1;g.beginPath();g.arc(x,y,3.2,0,6.283);g.stroke()}
-      else{g.globalAlpha=(on?.85:.2)*a;g.fillStyle='#ece9e4';g.beginPath();g.arc(x,y,(on?3.6:2.6)+f*5,0,6.283);g.fill();
-        if(f>.02){g.globalAlpha=.3*f*a;g.beginPath();g.arc(x,y,6+(1-f)*26,0,6.283);g.lineWidth=1;g.stroke()}}
-      c.flash[i]=f*.9;
+      const d=c.deg[i],on=i<al,x=c.x[i],y=c.y[i],f=c.flash[i],m=c.melt[i]=Math.max(0,(c.melt[i]||0)-.0025);
+      const r=r0*(i===0?1.25:.7+.3*c.accent[i])*(1+f*.35), c2=PAL[(c.slot+1+(i%3))%PAL.length];
+      const shape=(rr)=>{g.beginPath();if(tri){for(let k=0;k<3;k++){const t=-Math.PI/2+k*2.094+ang;g[k?'lineTo':'moveTo'](x+Math.cos(t)*rr*1.25,y+Math.sin(t)*rr*1.25)}g.closePath()}else g.arc(x,y,rr,0,6.283)};
+      if(d===REST){g.globalAlpha=(on?.6:.25)*a;g.strokeStyle='#ece9e4';g.lineWidth=1.1;shape(r*.5);g.stroke();continue}
+      if(!on){g.globalAlpha=.45*a;g.strokeStyle=rgba(i%2?c2:col,1);g.lineWidth=1.2;shape(r*.8);g.stroke();continue}
+      // it melts a little every time it sounds
+      if(m>.02){const len=m*r*2.6,wd=r*.55;g.globalAlpha=.8*a;g.fillStyle=rgba(i%2?c2:col,1);g.beginPath();g.moveTo(x-wd,y+r*.3);g.bezierCurveTo(x-wd*.6,y+r+len*.5,x-wd*.15,y+r+len*.8,x,y+r+len);g.bezierCurveTo(x+wd*.15,y+r+len*.8,x+wd*.6,y+r+len*.5,x+wd,y+r*.3);g.closePath();g.fill()}
+      g.globalAlpha=.34*a;g.fillStyle=rgba(i%2?c2:col,1);shape(r*1.55);g.fill();                 // halo
+      g.globalAlpha=.95*a;g.fillStyle=rgba(i%2?c2:col,1);shape(r);g.fill();
+      if(i===0){g.globalCompositeOperation='source-over';g.globalAlpha=.9*a;g.fillStyle='#070707';shape(r*.42);g.fill();g.globalCompositeOperation='screen'}   // the anchor has a dark heart
+      if(f>.02){g.globalAlpha=.7*f*a;g.strokeStyle='#ece9e4';g.lineWidth=1.2;shape(r*1.2+(1-f)*r*2.4);g.stroke()}
+      c.flash[i]=f*.91;
     }
-    if(c.ev&&performance.now()-c.evT<2600){const k=1-(performance.now()-c.evT)/2600;g.globalAlpha=.75*k*a;g.fillStyle='#ece9e4';g.font='300 9.5px Unbounded,system-ui,sans-serif';
-      const tx=clamp(c.x[0],20,W-110),ty=clamp(c.y[0]-16,padT,H-padB);g.fillText(c.ev.toUpperCase().split('').join(' '),tx,ty)}
+    g.globalCompositeOperation='source-over';
+    if(c.ev&&performance.now()-c.evT<2600){const k=1-(performance.now()-c.evT)/2600;g.globalAlpha=.8*k*a;g.fillStyle='#ece9e4';g.font='300 9.5px Unbounded,system-ui,sans-serif';
+      const tx=clamp(c.x[0],20,W-110),ty=clamp(c.y[0]-r0*1.4-14,padT,H-padB);g.fillText(c.ev.toUpperCase().split('').join(' '),tx,ty)}
+    g.globalCompositeOperation='screen';
   }
+  g.globalCompositeOperation='source-over';
   if(cur&&cur.length>1){g.globalAlpha=.9;g.strokeStyle='#ece9e4';g.lineWidth=1.6;path(cur);g.stroke()}
   g.globalAlpha=1;
 }
