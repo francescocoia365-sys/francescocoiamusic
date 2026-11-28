@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Cells — Francesco Coia</title>
+<meta name="description" content="Draw a line. It becomes a small musical cell. Draw another and they find each other.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#070707">
+<link rel="preload" href="../fonts/unbounded-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:Unbounded;font-weight:200;font-display:swap;src:url(../fonts/unbounded-latin-200-normal.woff2) format("woff2")}
+@font-face{font-family:Unbounded;font-weight:300;font-display:swap;src:url(../fonts/unbounded-latin-300-normal.woff2) format("woff2")}
+@font-face{font-family:'DM Sans';font-weight:400;font-display:swap;src:url(../fonts/dm-sans-latin-400-normal.woff2) format("woff2")}
+:root{color-scheme:dark;--bg:#070707;--ink:#ece9e4;--mute:#8d8983;--disp:Unbounded,system-ui,sans-serif;--sans:'DM Sans',system-ui,sans-serif;--padX:clamp(22px,4vw,58px)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body{font-family:var(--sans);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.5;background:url(../img/grain.png) 0 0/96px 96px}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.top{position:fixed;z-index:10;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top) + 26px) var(--padX) 0;pointer-events:none}
+.top a,.top button{pointer-events:auto;font:300 11px var(--disp);letter-spacing:.24em;text-transform:uppercase;color:var(--ink);text-decoration:none;background:none;border:0;cursor:pointer;padding:8px 0}
+.top .acts{display:flex;gap:clamp(18px,2.2vw,34px)}
+.top button{font-size:10px;letter-spacing:.2em;opacity:.6;transition:opacity .3s}
+.top button:hover{opacity:1}.top button[hidden]{display:none}
+.intro{position:fixed;z-index:5;left:var(--padX);right:var(--padX);top:50%;transform:translateY(-50%);pointer-events:none;transition:opacity 1.2s}
+.intro.gone{opacity:0}
+.intro h1{font:200 clamp(34px,7.4vw,96px)/.98 var(--disp);letter-spacing:-.02em;text-transform:uppercase}
+.intro small{display:block;margin-bottom:clamp(12px,2vh,20px);font:300 10.5px var(--disp);letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.intro p.no{color:var(--ink);opacity:.8}
+.intro p{margin-top:clamp(16px,2.4vh,26px);max-width:34ch;font-size:clamp(14px,1.25vw,17px);line-height:1.5;color:var(--mute)}
+.foot{position:fixed;z-index:10;left:var(--padX);right:var(--padX);bottom:max(14px,env(safe-area-inset-bottom));pointer-events:none}
+.foot .row{display:flex;justify-content:space-between;align-items:baseline;font:300 9.5px var(--disp);letter-spacing:.2em;text-transform:uppercase;color:var(--mute);margin-bottom:9px;min-height:12px}
+.foot .row b{font-weight:300;color:var(--ink)}
+.line{height:1.5px;background:rgba(236,233,228,.2);border-radius:2px;overflow:hidden}
+.line i{display:block;height:100%;background:var(--ink);transform-origin:0 50%;transform:scaleX(0)}
+</style>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="316d95d2-56e9-49cc-b9e7-a5a62e7ffebe" data-domains="francescocoiamusic.com,www.francescocoiamusic.com"></script>
+</head>
+<body>
+<canvas id="cv" aria-label="Drawing surface: each line you draw becomes a musical pattern"></canvas>
+<header class="top"><a href="../">Francesco Coia</a><div class="acts"><button type="button" id="undo" hidden>Undo</button><button type="button" id="clear" hidden>Clear</button></div></header>
+<div class="intro" id="intro"><small>Write with me</small><h1>Draw<br>a line</h1><p>Your line becomes a pattern. Height is pitch, length is how many notes, a quick hand plays more of them. Draw another and my rules make them fit.</p><p class="no">No AI. Nothing here is generated: only rules and chance, shaped by my taste.</p></div>
+<footer class="foot"><div class="row"><span>No AI · rules and chance</span><b><span id="count"></span><span id="chord"></span></b></div><div class="line"><i id="bar"></i></div></footer>
+<script>
+/* Cells: the rules of the CELLULE engine in residuo (Generative.h), drawn by hand.
+   A line = a cell: a short figure of scale degrees from an anchor note, with its own length and step. */
+const REST=-999, MAXCELLS=6, MAXLEN=9;
+const SCALE=[0,2,4,5,7,9,11];                     // C major / A minor: the whole progression lives in it
+const STEP=[2,1,.5,1/3,.25];                      // beats per step: 1/2, 1/4, 1/8, 1/8T, 1/16
+const BPM=72, BEAT=60/BPM, BARBEATS=4, EVOLVE_BARS=2, SWELL_IN=2, SWELL_OUT=3;
+// "Inverno a Giava" (residuo, ChordLoop.h): Fmaj7 G6 Em7 Am9 Dm9 G7sus4 Cmaj7/E A7sus4
+const CHORDS=[
+ {n:'Fmaj7', bass:5, pcs:[5,9,0,4]},{n:'G6', bass:7, pcs:[7,11,2,4]},{n:'Em7', bass:4, pcs:[4,7,11,2]},{n:'Am9', bass:9, pcs:[9,0,4,7,11]},
+ {n:'Dm9', bass:2, pcs:[2,5,9,0,4]},{n:'G7sus4', bass:7, pcs:[7,0,2,5]},{n:'Cmaj7/E', bass:4, pcs:[0,4,7,11]},{n:'A7sus4', bass:9, pcs:[9,2,4,7]}];
+const LOW=41, HIGH=88;                            // the page from bottom to top, in MIDI notes
+
+// scale helpers: a "degree index" counts scale notes from C-1
+const noteOfIdx=i=>{const o=Math.floor(i/7),d=((i%7)+7)%7;return 12*o+SCALE[d]};
+const idxOfNote=n=>{let best=0,bd=99;for(let i=Math.floor(n/12)*7-2;i<Math.floor(n/12)*7+9;i++){const d=Math.abs(noteOfIdx(i)-n);if(d<bd){bd=d;best=i}}return best};
+const IDX_LOW=idxOfNote(LOW), IDX_HIGH=idxOfNote(HIGH);
+
+// deterministic random per cell (the engine seeds each figure from the note and its place)
+function rngOf(seed){let s=seed>>>0||1;return()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0;return s/4294967296}}
+
+const cv=document.getElementById('cv'),g=cv.getContext('2d');
+let W=0,H=0,DPR=1,padT=0,padB=0;
+function size(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);g.setTransform(DPR,0,0,DPR,0,0);padT=Math.max(70,H*.11);padB=Math.max(64,H*.1)}
+addEventListener('resize',size);size();
+const yOfIdx=i=>padT+(1-(i-IDX_LOW)/(IDX_HIGH-IDX_LOW))*(H-padT-padB);
+const idxOfY=y=>Math.round(IDX_LOW+(1-(y-padT)/(H-padT-padB))*(IDX_HIGH-IDX_LOW));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+let cells=[],serial=0,history=[];
+
+/* ---- rules (applyRules in Generative.h) ---- */
+function applyRules(c){
+  const semis=d=>noteOfIdx(c.base+d), tone=d=>{const r=(((c.base+d)%7)+7)%7;return r===0||r===2||r===4};
+  let prev=0;
+  for(let i=1;i<c.len;i++){
+    if(c.deg[i]===REST)continue;
+    const pd=c.deg[prev];
+    for(let t=0;t<6;t++){const iv=Math.abs(semis(c.deg[i])-semis(pd));
+      const bad=iv===6||iv===10||iv===11||iv===13||(iv>7&&iv!==12);
+      if(!bad)break;c.deg[i]+=c.deg[i]>pd?-1:1}
+    if(i===(c.len>>1)&&!tone(c.deg[i]))c.deg[i]+=tone(c.deg[i]+1)?1:-1;     // strong step: a chord tone
+    prev=i}
+}
+const metrics=c=>{let n=0,mv=0,prev=REST,first=REST,last=REST,r=0;for(let i=0;i<c.len;i++){const d=c.deg[i];if(d===REST)continue;n++;r|=1<<i;if(prev!==REST)mv+=Math.abs(d-prev);if(first===REST)first=d;last=d;prev=d}
+  return{density:n/Math.max(1,c.len)/STEP[c.code],motion:mv/Math.max(1,n),dir:Math.sign(last-first),rhythm:r}};
+
+/* ---- a drawn line becomes a cell ---- */
+function cellFromStroke(pts){
+  // length along the line
+  let L=0;const acc=[0];for(let i=1;i<pts.length;i++){L+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);acc.push(L)}
+  const dt=Math.max(1,pts[pts.length-1].t-pts[0].t), energy=clamp(L/dt/1.1,0,1);            // drawing fast = playing loud
+  const unit=clamp(Math.min(W,H)*.105,44,96), len=clamp(Math.round(L/unit)+1,2,MAXLEN);
+  const at=u=>{const tL=u*L;let k=1;while(k<acc.length-1&&acc[k]<tL)k++;const a=pts[k-1],b=pts[k],f=(tL-acc[k-1])/Math.max(1e-6,acc[k]-acc[k-1]);return{x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f}};
+  const dots=[];for(let i=0;i<len;i++)dots.push(at(len===1?0:i/(len-1)));
+  const base=clamp(idxOfY(dots[0].y),IDX_LOW,IDX_HIGH), anchor=noteOfIdx(base);
+  const low=anchor<60, high=anchor>=72, salt=cells.filter(c=>!c.dying).length;
+  const c={id:++serial,pts,len,base,anchor,energy,low,high,deg:[],accent:[],x:[],y:[],born:null,phase:0,fade:0,dying:false,dieAt:0,flash:[],ev:'',evT:0,last:-1,lastNote:0,lastUntil:0};
+  const rnd=c.rnd=rngOf(c.id*2654435761+base*97+salt*13);
+  for(let i=0;i<len;i++){const d=clamp(idxOfY(dots[i].y),IDX_LOW,IDX_HIGH)-base;c.deg.push(i===0?0:clamp(d,-7,7));c.y.push(dots[i].y);c.accent.push(i===0?1:.62+.25*rnd());c.x.push(dots[i].x)}
+  // below middle C: only the note and its octaves, wide and slow (bassDeg)
+  if(low)for(let i=1;i<len;i++)c.deg[i]=Math.abs(c.deg[i])>=4?(c.deg[i]>0?7:-7):(Math.abs(c.deg[i])>=2?(c.deg[i]>0?4:-3):0);
+  // up high: more silence (it moves, it does not fill everything)
+  if(high)for(let i=1;i<len;i++)if(rnd()<.27)c.deg[i]=REST;
+  // soft hand = fewer notes
+  if(energy<.6)for(let i=1;i<len;i++)if(c.deg[i]!==REST&&rnd()<(.6-energy)*.7)c.deg[i]=REST;
+  applyRules(c);const drawn=c.deg.map((d,i)=>d===REST?clamp(idxOfY(dots[i].y),IDX_LOW,IDX_HIGH)-base:d);if(low)for(let i=1;i<len;i++)drawn[i]=0;
+  // the step: slow at the bottom, eighths in the middle, sixteenths at the top
+  let code=low?1:(high?4:2);
+  if(!low&&salt%3===2)code=3;                    // two against three: one companion in triplets
+  code+=energy<.2?-1:0;c.code=clamp(code,0,4);
+  // contrast with the cells already alive: try a few variants, keep the most different
+  const others=cells.filter(o=>!o.dying);
+  if(others.length){let best=null,bs=-1e9;
+    for(let k=0;k<6;k++){const t={...c,deg:c.deg.slice()};
+      if(k===1||k===4)t.code=clamp(c.code+(c.code>=3?-1:1),0,4);
+      if(k===2||k===4)for(let i=1;i<t.len;i+=2)if(t.deg[i]!==REST&&i!==(t.len>>1))t.deg[i]=REST;
+      if(k===3||k===5)for(let i=2;i<t.len;i+=3)if(t.deg[i]!==REST)t.deg[i]=REST;
+      if(k===5&&!low)t.code=3;
+      const mt=metrics(t);let sc=k===0?.35:0;                                   // the drawing as it is counts for something
+      for(const o of others){const mo=metrics(o);sc+=Math.abs(mt.density-mo.density)/Math.max(.5,mt.density,mo.density);sc+=Math.min(1,Math.abs(mt.motion-mo.motion)/2);sc+=mt.dir!==mo.dir?.6:0;
+        if(t.len===o.len){let x=mt.rhythm^mo.rhythm,b=0;while(x){b+=x&1;x>>=1}sc+=.5*b/t.len}else sc+=.4}
+      sc/=others.length;if(sc>bs){bs=sc;best=t}}
+    c.deg=best.deg;c.code=best.code}
+  // never thinner than half of what was drawn
+  {const want=Math.ceil(c.len/2);let have=c.deg.filter(d=>d!==REST).length;for(let i=1;i<c.len&&have<want;i++)if(c.deg[i]===REST){c.deg[i]=drawn[i];have++}applyRules(c)}
+  c.activeLen=Math.min(c.len,2+(rnd()<.5?1:0));   // additive: it starts short and grows
+  c.flash=new Array(MAXLEN).fill(0);
+  return c;
+}
+
+/* ---- processes: ADDITIVO, FASE, RIEMPI, RESPIRO (evolveCell) ---- */
+function evolveCell(c){
+  const r0=c.rnd()*1.0;let which=r0<.4?0:r0<.7?1:r0<.8?2:3;const rnd=c.rnd;
+  const prevNote=i=>{for(let j=i;j>=0;j--)if(c.deg[j]!==REST)return c.deg[j];return 0};
+  if(which===0){
+    if(c.activeLen>3&&rnd()<.3){c.activeLen--;c.ev='shorter'}
+    else if(c.activeLen<c.len){c.activeLen++;c.ev='+1 note'}
+    else c.activeLen=2,c.ev='starts again';
+  }else if(which===1){c.phase=(c.phase+1)%Math.max(1,c.activeLen);c.ev='phase +'+c.phase}
+  else if(which===2){const rests=[];for(let i=0;i<c.activeLen;i++)if(c.deg[i]===REST)rests.push(i);
+    if(rests.length){const i=rests[Math.floor(rnd()*rests.length)];c.deg[i]=prevNote(i)+(rnd()<.5?1:-1);c.ev='fills'}
+    else{const i=1+Math.floor(rnd()*Math.max(1,c.activeLen-1));if(i<c.len)c.deg[i]+=rnd()<.5?1:-1;c.ev='moves'}
+    applyRules(c)}
+  else{const i=1+Math.floor(rnd()*Math.max(1,c.activeLen-1));if(i<c.len){let rests=0;for(let k=0;k<c.len;k++)rests+=c.deg[k]===REST?1:0;
+    if(c.deg[i]===REST)c.deg[i]=prevNote(i);else if(rests*3<c.len&&rnd()<.5)c.deg[i]=REST;else for(let k=0;k<c.len;k++)c.accent[k]=k===i?1:Math.min(c.accent[k],.8);c.ev='breathes'}}
+  c.evT=performance.now();
+}
+function evolve(){const alive=cells.filter(c=>!c.dying&&c.fade>.5);if(!alive.length)return;
+  for(const c of alive)if(Math.random()<.75)evolveCell(c);evolveCell(alive[Math.floor(Math.random()*alive.length)])}
+
+/* ---- sound: small soft plucks, a quiet bass under them ---- */
+let ac=null,out=null,wet=null,t0=0,started=false;
+function audio(){
+  if(ac){if(ac.state!=='running')ac.resume();return}
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  ac=new AC({latencyHint:'interactive'});
+  const comp=ac.createDynamicsCompressor();comp.threshold.value=-16;comp.knee.value=18;comp.ratio.value=3;comp.attack.value=.01;comp.release.value=.25;
+  const master=ac.createGain();master.gain.value=.9;comp.connect(master).connect(ac.destination);
+  out=ac.createGain();out.gain.value=1;out.connect(comp);
+  // one soft echo, a short room: not much of either
+  const dl=ac.createDelay(2),fb=ac.createGain(),lp=ac.createBiquadFilter(),dw=ac.createGain();dl.delayTime.value=BEAT*.75;fb.gain.value=.3;lp.type='lowpass';lp.frequency.value=2200;dw.gain.value=.22;
+  wet=ac.createGain();wet.gain.value=1;wet.connect(dl);dl.connect(lp).connect(fb).connect(dl);lp.connect(dw).connect(comp);
+  const len=Math.floor(ac.sampleRate*1.6),ir=ac.createBuffer(2,len,ac.sampleRate);
+  for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);let lpv=0;for(let i=0;i<len;i++){const e=Math.pow(1-i/len,2.6);lpv+=((Math.random()*2-1)-lpv)*.35;d[i]=lpv*e}}
+  const rv=ac.createConvolver(),rw=ac.createGain();rv.buffer=ir;rw.gain.value=.16;wet.connect(rv).connect(rw).connect(comp);
+  t0=ac.currentTime+.12;nextBar=0;started=true;
+}
+const hz=n=>440*Math.pow(2,(n-69)/12);
+function pluck(note,when,vel,dur,pan){
+  const f=hz(note),o=ac.createOscillator(),o2=ac.createOscillator(),gn=ac.createGain(),g2=ac.createGain(),lp=ac.createBiquadFilter();
+  o.type='triangle';o.frequency.value=f;o2.type='sine';o2.frequency.value=f*2.001;
+  lp.type='lowpass';lp.Q.value=.4;lp.frequency.setValueAtTime(Math.min(9000,f*5+900*vel),when);lp.frequency.exponentialRampToValueAtTime(Math.max(300,f*1.4),when+Math.min(1.2,dur*1.6));
+  const peak=.2*vel*Math.min(1,Math.pow(330/f,.35)+.25),rel=Math.max(.5,Math.min(2.6,dur*1.9));
+  gn.gain.setValueAtTime(0,when);gn.gain.linearRampToValueAtTime(peak,when+.006);gn.gain.exponentialRampToValueAtTime(.0001,when+rel);
+  g2.gain.setValueAtTime(.22,when);g2.gain.exponentialRampToValueAtTime(.001,when+rel*.35);
+  o.connect(lp);o2.connect(g2).connect(lp);lp.connect(gn);
+  let node=gn;if(ac.createStereoPanner){const p=ac.createStereoPanner();p.pan.value=pan;gn.connect(p);node=p}
+  node.connect(out);node.connect(wet);o.start(when);o2.start(when);o.stop(when+rel+.05);o2.stop(when+rel+.05);
+}
+function bass(ch,when,dur){
+  const n=36+ch.bass+(ch.bass<4?12:0);
+  for(const [note,lv,type] of [[n,.11,'sine'],[n+7,.035,'sine'],[n+12,.03,'triangle']]){
+    const o=ac.createOscillator(),gn=ac.createGain();o.type=type;o.frequency.value=hz(note);
+    gn.gain.setValueAtTime(0,when);gn.gain.linearRampToValueAtTime(lv,when+.5);gn.gain.setValueAtTime(lv,when+dur-.5);gn.gain.linearRampToValueAtTime(0,when+dur+.9);
+    o.connect(gn).connect(out);o.start(when);o.stop(when+dur+1)}
+}
+
+/* ---- the clock ---- */
+let nextBar=0,barsDone=0;const queue=[];
+const beatAt=t=>(t-t0)/BEAT, chordAtBeat=b=>CHORDS[((Math.floor(b/BARBEATS)%CHORDS.length)+CHORDS.length)%CHORDS.length];
+function fit(c,d,ch,when){
+  let idx=c.base+d,n=noteOfIdx(idx);
+  // the chord leads: a note one semitone above a chord tone gives way
+  for(let t=0;t<2;t++){const pc=((n%12)+12)%12;if(ch.pcs.some(p=>((pc-p+12)%12)===1)&&!ch.pcs.includes(pc)){idx--;n=noteOfIdx(idx)}else break}
+  // between cells: no tight seconds under C5
+  for(let t=0;t<2;t++){let clash=false;for(const o of cells){if(o===c||o.lastUntil<when)continue;const iv=Math.abs(o.lastNote-n);if((iv===1||iv===2)&&n<72&&o.lastNote<72){clash=true;break}}
+    if(clash){idx+=1;n=noteOfIdx(idx)}else break}
+  return n}
+function schedule(){
+  if(!started||!ac)return;
+  const horizon=ac.currentTime+.14;
+  while(t0+nextBar*BARBEATS*BEAT<horizon){
+    const when=t0+nextBar*BARBEATS*BEAT;
+    if(cells.some(c=>!c.dying))bass(CHORDS[nextBar%CHORDS.length],Math.max(when,ac.currentTime+.01),BARBEATS*BEAT);
+    if(nextBar>0&&nextBar%EVOLVE_BARS===0)queue.push({t:when,evolve:true});
+    nextBar++}
+  for(const c of cells){
+    const sb=STEP[c.code]*BEAT;
+    if(c.born===null){c.born=Math.ceil((ac.currentTime+.03-t0)/sb)*sb+t0;c.k=0}
+    while(c.born+c.k*sb<horizon){
+      const when=c.born+c.k*sb,al=Math.max(1,c.activeLen),step=(c.k+c.phase)%al,d=c.deg[step];
+      const age=(when-c.born)/(BARBEATS*BEAT),fin=Math.min(1,.25+age/SWELL_IN*.75),fout=c.dying?Math.max(0,1-(when-c.dieAt)/(SWELL_OUT*BARBEATS*BEAT)):1;
+      if(d!==REST&&fout>0&&when>=ac.currentTime-.01){
+        const ch=chordAtBeat(beatAt(when)),n=fit(c,d,ch,when),gate=(n<48?1.6:1)*.75;
+        const vel=clamp((.45+.55*c.energy)*c.accent[step]*fin*fout,0,1);
+        pluck(n,when,vel,sb*gate,clamp((c.x[step]/W-.5)*1.2,-.7,.7));
+        c.lastNote=n;c.lastUntil=when+sb*gate;
+        queue.push({t:when,c,step,vel})}
+      c.k++}
+  }
+  cells=cells.filter(c=>!(c.dying&&ac.currentTime>c.dieAt+SWELL_OUT*BARBEATS*BEAT+1));
+}
+setInterval(schedule,25);
+
+/* ---- drawing ---- */
+let cur=null;const intro=document.getElementById('intro'),undoB=document.getElementById('undo'),clearB=document.getElementById('clear'),countEl=document.getElementById('count'),chordEl=document.getElementById('chord'),barEl=document.getElementById('bar');
+function ui(){const n=cells.filter(c=>!c.dying).length;undoB.hidden=clearB.hidden=n===0;countEl.textContent=n?`${n}/${MAXCELLS} · `:''}
+cv.addEventListener('pointerdown',e=>{audio();cv.setPointerCapture(e.pointerId);cur=[{x:e.clientX,y:e.clientY,t:performance.now()}]});
+cv.addEventListener('pointermove',e=>{if(!cur)return;const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];for(const m of evs.length?evs:[e]){const l=cur[cur.length-1];if(Math.hypot(m.clientX-l.x,m.clientY-l.y)>2.5)cur.push({x:m.clientX,y:m.clientY,t:performance.now()})}});
+function end(){if(!cur)return;const pts=cur;cur=null;audio();
+  let L=0;for(let i=1;i<pts.length;i++)L+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+  if(L<26)return;                                                    // a tap is not a line
+  const alive=cells.filter(c=>!c.dying);
+  if(alive.length>=MAXCELLS&&ac){const old=alive[0];old.dying=true;old.dieAt=ac.currentTime}   // the oldest leaves, slowly
+  const c=cellFromStroke(smooth(pts));cells.push(c);history.push(c.id);intro.classList.add('gone');ui();
+  try{window.umami&&umami.track('Cell drawn',{cells:cells.filter(c=>!c.dying).length})}catch(_){}}
+cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+function smooth(p){if(p.length<3)return p;const o=[p[0]];for(let i=1;i<p.length-1;i++)o.push({x:(p[i-1].x+2*p[i].x+p[i+1].x)/4,y:(p[i-1].y+2*p[i].y+p[i+1].y)/4,t:p[i].t});o.push(p[p.length-1]);return o}
+function kill(c){if(!c||c.dying)return;c.dying=true;c.dieAt=ac?ac.currentTime-(SWELL_OUT-1)*BARBEATS*BEAT:0}
+undoB.addEventListener('click',()=>{while(history.length){const id=history.pop(),c=cells.find(x=>x.id===id&&!x.dying);if(c){kill(c);break}}ui()});
+clearB.addEventListener('click',()=>{for(const c of cells)kill(c);history=[];ui()});
+addEventListener('keydown',e=>{if(e.key==='z'&&(e.metaKey||e.ctrlKey)){e.preventDefault();undoB.click()}});
+document.addEventListener('visibilitychange',()=>{if(ac&&document.hidden)ac.suspend();});
+
+function path(pts){g.beginPath();g.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length-1;i++){const mx=(pts[i].x+pts[i+1].x)/2,my=(pts[i].y+pts[i+1].y)/2;g.quadraticCurveTo(pts[i].x,pts[i].y,mx,my)}const l=pts[pts.length-1];g.lineTo(l.x,l.y)}
+function frame(){
+  requestAnimationFrame(frame);
+  const now=ac?ac.currentTime:0;
+  while(queue.length&&queue[0].t<=now){const q=queue.shift();if(q.evolve)evolve();else if(q.c){q.c.flash[q.step]=1;q.c.last=q.step}}
+  queue.sort((a,b)=>a.t-b.t);
+  g.clearRect(0,0,W,H);
+  g.lineCap='round';g.lineJoin='round';
+  if(started){const b=beatAt(now),ch=chordAtBeat(Math.max(0,b)),loop=CHORDS.length*BARBEATS;
+    const anyone=cells.some(c=>!c.dying);
+    chordEl.textContent=anyone?ch.n:'';barEl.style.transform=`scaleX(${anyone?((b%loop)+loop)%loop/loop:0})`}
+  for(const c of cells){
+    const age=c.born===null?0:Math.max(0,(now-c.born)/(BARBEATS*BEAT)),fin=Math.min(1,.3+age/SWELL_IN*.7),fout=c.dying?Math.max(0,1-(now-c.dieAt)/(SWELL_OUT*BARBEATS*BEAT)):1,a=fin*fout;
+    if(a<=0)continue;
+    g.globalAlpha=.38*a;g.strokeStyle='#ece9e4';g.lineWidth=1.25;path(c.pts);g.stroke();
+    const al=Math.max(1,c.activeLen);
+    for(let i=0;i<c.len;i++){
+      const d=c.deg[i],on=i<al,x=c.x[i],y=c.y[i],f=c.flash[i];
+      if(d===REST){g.globalAlpha=(on?.5:.18)*a;g.lineWidth=1;g.beginPath();g.arc(x,y,3.2,0,6.283);g.stroke()}
+      else{g.globalAlpha=(on?.85:.2)*a;g.fillStyle='#ece9e4';g.beginPath();g.arc(x,y,(on?3.6:2.6)+f*5,0,6.283);g.fill();
+        if(f>.02){g.globalAlpha=.3*f*a;g.beginPath();g.arc(x,y,6+(1-f)*26,0,6.283);g.lineWidth=1;g.stroke()}}
+      c.flash[i]=f*.9;
+    }
+    if(c.ev&&performance.now()-c.evT<2600){const k=1-(performance.now()-c.evT)/2600;g.globalAlpha=.75*k*a;g.fillStyle='#ece9e4';g.font='300 9.5px Unbounded,system-ui,sans-serif';
+      const tx=clamp(c.x[0],20,W-110),ty=clamp(c.y[0]-16,padT,H-padB);g.fillText(c.ev.toUpperCase().split('').join(' '),tx,ty)}
+  }
+  if(cur&&cur.length>1){g.globalAlpha=.9;g.strokeStyle='#ece9e4';g.lineWidth=1.6;path(cur);g.stroke()}
+  g.globalAlpha=1;
+}
+requestAnimationFrame(frame);ui();
+</script>
+</body>
+</html>
