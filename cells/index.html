@@ -30,6 +30,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 .intro p.no{color:var(--ink);opacity:.8}
 .intro p{margin-top:clamp(16px,2.4vh,26px);max-width:34ch;font-size:clamp(14px,1.25vw,17px);line-height:1.5;color:var(--mute)}
 .foot{position:fixed;z-index:10;left:var(--padX);right:var(--padX);bottom:max(14px,env(safe-area-inset-bottom));pointer-events:none}
+.foot .guide{margin-bottom:10px;font-size:clamp(14px,1.2vw,16px);line-height:1.35;color:var(--ink);max-width:40ch;min-height:1.35em}
 .foot .row{display:flex;justify-content:space-between;align-items:baseline;font:300 9.5px var(--disp);letter-spacing:.2em;text-transform:uppercase;color:var(--mute);margin-bottom:9px;min-height:12px}
 .foot .row.no{margin-bottom:5px;opacity:.8}
 .foot .row b{font-weight:300;color:var(--ink)}
@@ -42,14 +43,16 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 <canvas id="cv" aria-label="Drawing surface: each line you draw becomes a musical pattern"></canvas>
 <header class="top"><a href="../">Francesco Coia</a><div class="acts"><button type="button" id="undo" hidden>Undo</button><button type="button" id="clear" hidden>Clear</button></div></header>
 <div class="intro" id="intro"><small>Write with me</small><h1>Draw<br>a line</h1><p>Your line becomes a pattern. Height is pitch, length is how many notes, a quick hand plays more of them. Low notes are large and slow, high ones small and quick; triangles move in threes. At first each line is on its own. At four lines the bass comes in, and little by little they all start to follow the harmony.</p><p class="no">No AI. Nothing here is generated: only rules and chance, shaped by my taste.</p></div>
-<footer class="foot"><div class="row"><span>No AI · rules and chance</span><b><span id="count"></span></b><span id="prog" hidden></span><span id="chord" hidden></span></div><div class="line"><i id="bar"></i></div></footer>
+<footer class="foot"><p class="guide" id="guide"></p><div class="row"><span>No AI · rules and chance</span><b><span id="count"></span></b><span id="prog" hidden></span><span id="chord" hidden></span></div><div class="line"><i id="bar"></i></div></footer>
 <script>
 /* Cells: the rules of the CELLULE engine in residuo (Generative.h), drawn by hand.
    A line = a cell: a short figure of scale degrees from an anchor note, with its own length and step. */
 const REST=-999, MAXCELLS=6, MAXLEN=9;
 const SCALE=[0,2,4,5,7,9,11];                     // C major / A minor: the whole progression lives in it
 const STEP=[2,1,.5,1/3,.25];                      // beats per step: 1/2, 1/4, 1/8, 1/8T, 1/16
-const BPM=66, BEAT=60/BPM, BARBEATS=4, BAR=BARBEATS*BEAT, EVOLVE_BARS=2, SWELL_IN=2, SWELL_OUT=3;
+const BPM=58, BEAT=60/BPM, BARBEATS=4, BAR=BARBEATS*BEAT, EVOLVE_BARS=2, SWELL_IN=2, SWELL_OUT=3;
+const CALM_BARS=4, SLOW=[0,0,1,1,2];                   // every line begins at half its speed, for four bars
+const T_IN=900,T_STEP=780,T_LAND=380,T_HOLD=1100,T_OUT=900;   // reading the first line onto the staff
 const BASS_AT=4, FOLLOW_BARS=10, PAD_AFTER=6;      // the bass joins at four lines; the lines learn the harmony over ten bars; the pad comes six bars after the bass
 // the Sakamoto shelf of chord loops in residuo (ChordLoop.h). One is picked at every start and every clear.
 const PROGS=[
@@ -82,8 +85,8 @@ const IDX_LOW=idxOfNote(LOW), IDX_HIGH=idxOfNote(HIGH);
 function rngOf(seed){let s=seed>>>0||1;return()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0;return s/4294967296}}
 
 const cv=document.getElementById('cv'),g=cv.getContext('2d');
-let W=0,H=0,DPR=1,padT=0,padB=0;
-function size(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);g.setTransform(DPR,0,0,DPR,0,0);padT=Math.max(70,H*.11);padB=Math.max(64,H*.1)}
+let W=0,H=0,DPR=1,padT=0,padB=0;const KEYBAND=74,bgc=document.createElement('canvas'),bg=bgc.getContext('2d');
+function size(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);g.setTransform(DPR,0,0,DPR,0,0);padT=Math.max(70,H*.11);padB=Math.max(96,H*.12)+KEYBAND;bgc.width=Math.max(2,Math.round(W/4));bgc.height=Math.max(2,Math.round(H/4))}
 addEventListener('resize',size);size();
 const yOfIdx=i=>padT+(1-(i-IDX_LOW)/(IDX_HIGH-IDX_LOW))*(H-padT-padB);
 const idxOfY=y=>Math.round(IDX_LOW+(1-(y-padT)/(H-padT-padB))*(IDX_HIGH-IDX_LOW));
@@ -151,7 +154,7 @@ function cellFromStroke(pts){
   {const want=Math.ceil(c.len/2);let have=c.deg.filter(d=>d!==REST).length;for(let i=1;i<c.len&&have<want;i++)if(c.deg[i]===REST){c.deg[i]=drawn[i];have++}applyRules(c)}
   c.activeLen=Math.min(c.len,2+(rnd()<.5?1:0));   // additive: it starts short and grows
   c.flash=new Array(MAXLEN).fill(0);c.melt=new Array(MAXLEN).fill(0);
-  {const used=cells.filter(o=>!o.dying).map(o=>o.slot);let sl=0;while(used.includes(sl))sl++;c.slot=sl%PAL.length}
+  c.slot=nextSlot();
   return c;
 }
 
@@ -245,16 +248,19 @@ function schedule(){
         bass(ch,tw,du,lv);if(hb>=PAD_AFTER)pad(ch,tw,du,Math.min(1,(hb-PAD_AFTER+1)/6))}}
     if(nextBar>0&&nextBar%EVOLVE_BARS===0)queue.push({t:when,evolve:true});
     nextBar++}
+  duck=Math.max(0,duck-.025/(BAR/1)*1);
   follow=harmBar<0?0:clamp((barAt(ac.currentTime)-harmBar)/FOLLOW_BARS,0,1);
   for(const c of cells){
-    const sb=STEP[c.code]*BEAT;
-    if(c.born===null){c.born=Math.ceil((ac.currentTime+.03-t0)/sb)*sb+t0;c.k=0}
+    if(c.intro)continue;                                   // the first line is still being read
+    let sb=STEP[c.codeNow===undefined?c.code:c.codeNow]*BEAT;
+    if(c.born===null){c.codeNow=SLOW[c.code];sb=STEP[c.codeNow]*BEAT;c.born=Math.ceil((ac.currentTime+.03-t0)/sb)*sb+t0;c.k=0;c.switchAt=t0+(Math.ceil((c.born-t0)/BAR-1e-6)+CALM_BARS)*BAR}
+    if(c.codeNow!==c.code&&c.born+c.k*sb>=c.switchAt-1e-6){c.codeNow=c.code;sb=STEP[c.code]*BEAT;c.born=c.switchAt;c.k=0;c.ev='finds its pace';c.evT=performance.now()}
     while(c.born+c.k*sb<horizon){
       const when=c.born+c.k*sb,al=Math.max(1,c.activeLen),step=(c.k+c.phase)%al,d=c.deg[step];
       const age=(when-c.born)/BAR,fin=Math.min(1,.3+age/SWELL_IN*.7),fout=c.dying?Math.max(0,1-(when-c.dieAt)/(SWELL_OUT*BAR)):1;
       if(d!==REST&&fout>0&&when>=ac.currentTime-.01){
         const n=fit(c,d,step,when),gate=(n<48?1.6:1)*.75;
-        const vel=clamp((.3+.5*c.energy)*c.accent[step]*fin*fout,0,1);
+        const vel=clamp((.3+.5*c.energy)*c.accent[step]*fin*fout*(1-.5*duck),0,1);
         pluck(n,when,vel,sb*gate,clamp((c.x[step]/W-.5)*1.2,-.7,.7));
         c.lastNote=n;c.lastUntil=when+sb*gate;
         queue.push({t:when,c,step,vel})}
@@ -264,23 +270,65 @@ function schedule(){
 }
 setInterval(schedule,25);
 
+/* ---- keys: seven shapes, five notes. They move with the harmony, so they are always right ---- */
+const NK=7;let keysA=0,duck=0;const kflash=new Array(NK).fill(0);
+function keyNotes(ch){                                       // the chord's own notes first, then the scale notes that do not rub against them
+  let pcs=ch.pcs.slice(0,5);for(const p of SCALE){if(pcs.length>=5)break;if(pcs.includes(p))continue;if(pcs.some(q=>{const d=(p-q+12)%12;return d===1||d===11}))continue;pcs.push(p)}
+  const o=[];let n=59;while(o.length<NK){n++;if(pcs.includes(n%12))o.push(n)}return o}
+function keyBox(i){const r=Math.min(27,(W-2*22)/NK/2-3),gap=Math.min(r*2+16,(W-44)/NK),x0=W/2-gap*(NK-1)/2;return{x:x0+i*gap,y:H-(padB-KEYBAND)-KEYBAND/2-2,r}}
+function keyAt(x,y){if(keysA<.5)return -1;for(let i=0;i<NK;i++){const k=keyBox(i);if(Math.hypot(x-k.x,y-k.y)<k.r+7)return i}return -1}
+function playKey(i){if(!ac||keysA<.5)return;const ch=chordAt(ac.currentTime+.02)||CHORDS[0],n=keyNotes(ch)[i],k=keyBox(i),col=PAL[i%PAL.length];
+  voice(n,ac.currentTime+.005,.42,{hold:1.6,release:3.2,lp:3400,pan:(i/(NK-1)-.5)*.8,send:1.2});kflash[i]=1;duck=1;
+  // what you play stays in the air
+  const bx=(k.x/W)*bgc.width,by=(.2+.55*(1-i/(NK-1))+(Math.random()-.5)*.12)*bgc.height,R=bgc.width*(.22+Math.random()*.16),gr=bg.createRadialGradient(bx,by,0,bx,by,R);
+  gr.addColorStop(0,rgba(col,.13));gr.addColorStop(.6,rgba(col,.05));gr.addColorStop(1,rgba(col,0));bg.globalCompositeOperation='screen';bg.fillStyle=gr;bg.fillRect(0,0,bgc.width,bgc.height);
+  // the lines answer: the one living closest takes your note as its first; the others leave you room for a bar
+  let best=null,bd=1e9;for(const c of cells){if(c.dying||c.intro)continue;const d=Math.abs(noteOfIdx(c.base)-n+(noteOfIdx(c.base)<n-12?12:0));if(d<bd){bd=d;best=c}}
+  if(best){const pc=n%12;let t=best.base,found=null;for(let d=0;d<=3&&found===null;d++)for(const sgn of [1,-1]){const j=best.base+sgn*d;if(((noteOfIdx(j)%12)+12)%12===pc){found=j;break}}
+    if(found!==null&&found!==best.base){best.base=clamp(found,IDX_LOW,IDX_HIGH);best.anchor=noteOfIdx(best.base);applyRules(best)}best.ev='answers';best.evT=performance.now();best.flash[0]=1}
+  try{window.umami&&!playKey.t&&(playKey.t=1,umami.track('Key played'))}catch(_){}}
+addEventListener('keydown',e=>{const i='asdfghj'.indexOf(e.key.toLowerCase());if(i>=0&&!e.repeat&&!e.metaKey&&!e.ctrlKey)playKey(i)});
+
 /* ---- drawing ---- */
-let cur=null;const intro=document.getElementById('intro'),undoB=document.getElementById('undo'),clearB=document.getElementById('clear'),countEl=document.getElementById('count'),progEl=document.getElementById('prog'),chordEl=document.getElementById('chord'),barEl=document.getElementById('bar');
+let cur=null,bgT=0,nowF=0;const intro=document.getElementById('intro'),undoB=document.getElementById('undo'),clearB=document.getElementById('clear'),countEl=document.getElementById('count'),progEl=document.getElementById('prog'),chordEl=document.getElementById('chord'),barEl=document.getElementById('bar');
 function ui(){const n=cells.filter(c=>!c.dying).length;undoB.hidden=clearB.hidden=n===0;countEl.textContent=n?`${n}/${MAXCELLS}`:''}
-cv.addEventListener('pointerdown',e=>{audio();cv.setPointerCapture(e.pointerId);cur=[{x:e.clientX,y:e.clientY,t:performance.now()}]});
+cv.addEventListener('pointerdown',e=>{audio();const ki=keyAt(e.clientX,e.clientY);if(ki>=0){playKey(ki);return}cv.setPointerCapture(e.pointerId);cur=[{x:e.clientX,y:e.clientY,t:performance.now()}]});
 cv.addEventListener('pointermove',e=>{if(!cur)return;const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];for(const m of evs.length?evs:[e]){const l=cur[cur.length-1];if(Math.hypot(m.clientX-l.x,m.clientY-l.y)>2.5)cur.push({x:m.clientX,y:m.clientY,t:performance.now()})}});
 function end(){if(!cur)return;const pts=cur;cur=null;audio();
   let L=0;for(let i=1;i<pts.length;i++)L+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
   if(L<26)return;                                                    // a tap is not a line
   const alive=cells.filter(c=>!c.dying);
   if(alive.length>=MAXCELLS&&ac){const old=alive[0];old.dying=true;old.dieAt=ac.currentTime}   // the oldest leaves, slowly
-  const c=cellFromStroke(smooth(pts));cells.push(c);history.push(c.id);intro.classList.add('gone');ui();
+  const c=cellFromStroke(smooth(pts));if(drawn===0)c.intro={start:performance.now(),played:-1};cells.push(c);history.push(c.id);drawn++;intro.classList.add('gone');ui();
   try{window.umami&&umami.track('Cell drawn',{cells:cells.filter(c=>!c.dying).length})}catch(_){}}
 cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
-function smooth(p){if(p.length<3)return p;const o=[p[0]];for(let i=1;i<p.length-1;i++)o.push({x:(p[i-1].x+2*p[i].x+p[i+1].x)/4,y:(p[i-1].y+2*p[i].y+p[i+1].y)/4,t:p[i].t});o.push(p[p.length-1]);return o}
+function smooth(p){if(p.length<3)return p;                       // even spacing, then three soft passes: the hand's tremor goes, the gesture stays
+  let L=0;const acc=[0];for(let i=1;i<p.length;i++){L+=Math.hypot(p[i].x-p[i-1].x,p[i].y-p[i-1].y);acc.push(L)}
+  const n=Math.max(8,Math.min(160,Math.round(L/7)));let o=[],k=1;
+  for(let i=0;i<=n;i++){const t=L*i/n;while(k<acc.length-1&&acc[k]<t)k++;const a=p[k-1],b=p[k],f=(t-acc[k-1])/Math.max(1e-6,acc[k]-acc[k-1]);o.push({x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f,t:a.t+(b.t-a.t)*f})}
+  for(let pass=0;pass<3;pass++){const q=[o[0]];for(let i=1;i<o.length-1;i++)q.push({x:(o[i-1].x+2*o[i].x+o[i+1].x)/4,y:(o[i-1].y+2*o[i].y+o[i+1].y)/4,t:o[i].t});q.push(o[o.length-1]);o=q}
+  return o}
+function brush(pts,base,col,alpha,wobble,seed,tms){const n=pts.length;if(n<2)return;const L=[],R=[];
+  for(let i=0;i<n;i++){const u=i/(n-1),p=pts[i],q=pts[Math.min(n-1,i+1)],o=pts[Math.max(0,i-1)];let dx=q.x-o.x,dy=q.y-o.y;const m=Math.hypot(dx,dy)||1;dx/=m;dy/=m;
+    const w=base*(.14+.86*Math.pow(Math.sin(Math.PI*Math.min(1,u*1.08)),.7)),wob=wobble?Math.sin(tms*.6+u*5+seed)*wobble:0,px=p.x-dy*wob,py=p.y+dx*wob;L.push([px-dy*w/2,py+dx*w/2]);R.push([px+dy*w/2,py-dx*w/2])}
+  g.globalAlpha=alpha;g.fillStyle=rgba(col,1);g.beginPath();g.moveTo(L[0][0],L[0][1]);for(let i=1;i<n;i++)g.lineTo(L[i][0],L[i][1]);for(let i=n-1;i>=0;i--)g.lineTo(R[i][0],R[i][1]);g.closePath();g.fill()}
+const bodyOf=(y,energy)=>{const reg=clamp((noteOfIdx(clamp(idxOfY(y),IDX_LOW,IDX_HIGH))-LOW)/(HIGH-LOW),0,1);return(2.2+(1-reg)*9)*(.75+.5*energy)};
+const nextSlot=()=>{const used=cells.filter(o=>!o.dying).map(o=>o.slot);let sl=0;while(used.includes(sl))sl++;return sl%PAL.length};
+/* ---- a guide: what to try next ---- */
+const GUIDE=[
+ ['Draw a line here, left to right',[.12,.72,.86,.68,.05]],
+ ['Now one higher up, with a quicker hand',[.2,.44,.9,.4,-.06]],
+ ['A short one near the top',[.5,.2,.88,.26,.03]],
+ ['One more, low and slow: the bass is waiting for it',[.1,.74,.6,.72,.02]],
+ ['Now play the shapes below: they are always in tune, and the lines answer you',null],
+ ['Keep playing. What you play stays in the air as colour',null],
+ ['A seventh line lets the oldest one go. Clear starts again, with a different harmony',null]];
+let drawn=0;const guideEl=document.getElementById('guide');
+function guideStep(){const n=cells.filter(c=>!c.dying).length;return Math.min(GUIDE.length-1,Math.max(n,Math.min(drawn,4)))}
+function ghostPts(spec){const [x0,y0,x1,y1,amp]=spec,o=[];for(let i=0;i<=40;i++){const t=i/40;o.push({x:W*(x0+(x1-x0)*t),y:H*(y0+(y1-y0)*t+amp*Math.sin(t*6.283))})}return o}
 function kill(c){if(!c||c.dying)return;c.dying=true;c.dieAt=ac?ac.currentTime-(SWELL_OUT-1)*BAR:0}
 undoB.addEventListener('click',()=>{while(history.length){const id=history.pop(),c=cells.find(x=>x.id===id&&!x.dying);if(c){kill(c);break}}ui()});
-clearB.addEventListener('click',()=>{for(const c of cells)kill(c);history=[];harmBar=-1;pickProg();ui()});
+clearB.addEventListener('click',()=>{for(const c of cells)kill(c);history=[];harmBar=-1;drawn=0;keysA=0;bg.clearRect(0,0,bgc.width,bgc.height);pickProg();ui()});
 addEventListener('keydown',e=>{if(e.key==='z'&&(e.metaKey||e.ctrlKey)){e.preventDefault();undoB.click()}});
 document.addEventListener('visibilitychange',()=>{if(ac&&document.hidden)ac.suspend();});
 
@@ -291,6 +339,8 @@ function frame(){
   while(queue.length&&queue[0].t<=now){const q=queue.shift();if(q.evolve)evolve();else if(q.c){q.c.flash[q.step]=1;q.c.melt[q.step]=Math.min(1,(q.c.melt[q.step]||0)+.2);q.c.last=q.step}}
   queue.sort((a,b)=>a.t-b.t);
   g.clearRect(0,0,W,H);
+  g.globalAlpha=1;g.imageSmoothingEnabled=true;g.drawImage(bgc,0,0,W,H);
+  if((nowF=performance.now())-bgT>900){bgT=nowF;bg.globalCompositeOperation='destination-out';bg.fillStyle='rgba(0,0,0,.012)';bg.fillRect(0,0,bgc.width,bgc.height)}   // it thins out very slowly
   g.lineCap='round';g.lineJoin='round';
   {const anyone=cells.filter(c=>!c.dying).length,ch=started?chordAt(now):null;
     if(ch){const x=(((barAt(now)-harmBar)%LOOPBARS)+LOOPBARS)%LOOPBARS;barEl.style.transform=`scaleX(${x/LOOPBARS})`}
@@ -300,7 +350,15 @@ function frame(){
     const field=(k,al)=>{k=((k%CHORDS.length)+CHORDS.length)%CHORDS.length;const c=CHORDS[k],x=W*(.18+.64*((c.root*5)%12)/11),y=H*(.3+.4*((c.root*7)%12)/11),col=PAL[c.root%PAL.length];
       const gr=g.createRadialGradient(x,y,R*.1,x,y,R);gr.addColorStop(0,rgba(col,.15*al));gr.addColorStop(.7,rgba(col,.05*al));gr.addColorStop(1,rgba(col,0));g.fillStyle=gr;g.fillRect(0,0,W,H)};
     g.globalAlpha=1;field(k,fr*lv);if(fr<1)field(k-1,(1-fr)*lv)}}
-  const tms=performance.now()/1000;
+  const tms=performance.now()/1000,nowMs=performance.now();
+  for(const c of cells){if(!c.intro)continue;const el=nowMs-c.intro.start,body=T_IN+c.len*T_STEP+T_HOLD;
+    if(el>body+T_OUT){c.intro=null;continue}
+    c.intro.a=el<T_IN?el/T_IN:el<body?1:1-(el-body)/T_OUT;c.intro.back=el<body?0:(el-body)/T_OUT;
+    // the staff: the page is already one, I only show its lines
+    g.strokeStyle='#ece9e4';g.lineWidth=1;g.globalAlpha=.34*c.intro.a;
+    for(const m of [43,47,50,53,57,64,67,71,74,77]){const y=yOfIdx(idxOfNote(m));g.beginPath();g.moveTo(W*.04,y);g.lineTo(W*.96,y);g.stroke()}
+    for(let i=0;i<c.len;i++){const ti=el-T_IN-i*T_STEP;if(ti>=T_LAND&&c.intro.played<i){c.intro.played=i;const d=c.deg[i];
+      if(d!==REST&&ac){pluck(noteOfIdx(c.base+d),ac.currentTime+.01,.5,1.4,clamp((c.x[i]/W-.5)*1.2,-.7,.7));c.flash[i]=1;c.melt[i]=.25}}}}
   g.globalCompositeOperation='screen';
   for(const c of cells){
     const age=c.born===null?0:Math.max(0,(now-c.born)/BAR),fin=Math.min(1,.35+age/SWELL_IN*.65),fout=c.dying?Math.max(0,1-(now-c.dieAt)/(SWELL_OUT*BAR)):1,a=fin*fout;
@@ -315,15 +373,12 @@ function frame(){
     if(c.low){g.globalAlpha=.5*a;g.strokeStyle=rgba(col,1);g.lineWidth=2.2;const mx=(p0.x+p1.x)/2,my=(p0.y+p1.y)/2,rr=Math.hypot(p1.x-p0.x,p1.y-p0.y)*.62+30;g.beginPath();g.arc(mx,my+rr*.55,rr,Math.PI*1.12,Math.PI*1.88);g.stroke()}
     if(c.high){g.globalAlpha=.4*a;g.strokeStyle='#ece9e4';g.lineWidth=.8;for(let k=0;k<3;k++){const o=6+k*5;g.beginPath();g.moveTo(p1.x+10+o,p1.y-34-o*.4);g.lineTo(p1.x-26+o,p1.y+30-o*.4);g.stroke()}}
     // the line itself: a brush with a body, breathing slightly
-    const n=c.pts.length,base=(2.2+big*9)*(.75+.5*c.energy),L=[],Rr=[];
-    for(let i=0;i<n;i++){const u=i/(n-1),p=c.pts[i],q=c.pts[Math.min(n-1,i+1)],o=c.pts[Math.max(0,i-1)];let dx=q.x-o.x,dy=q.y-o.y;const m=Math.hypot(dx,dy)||1;dx/=m;dy/=m;
-      const w=base*(.14+.86*Math.pow(Math.sin(Math.PI*Math.min(1,u*1.08)),.7)),wob=Math.sin(tms*.6+u*5+c.id)*1.6*(.4+big);
-      const px=p.x-dy*wob,py=p.y+dx*wob;L.push([px-dy*w/2,py+dx*w/2]);Rr.push([px+dy*w/2,py-dx*w/2])}
-    g.globalAlpha=.9*a;g.fillStyle=rgba(col,1);g.beginPath();g.moveTo(L[0][0],L[0][1]);for(let i=1;i<n;i++)g.lineTo(L[i][0],L[i][1]);for(let i=n-1;i>=0;i--)g.lineTo(Rr[i][0],Rr[i][1]);g.closePath();g.fill();
+    brush(c.pts,(2.2+big*9)*(.75+.5*c.energy),col,.9*a,1.6*(.4+big),c.id,tms);
     // the notes: discs for even steps, triangles for triplets; low is large, high is small
     const r0=5+big*20, tri=c.code===3;
     for(let i=0;i<c.len;i++){
-      const d=c.deg[i],on=i<al,x=c.x[i],y=c.y[i],f=c.flash[i],m=c.melt[i]=Math.max(0,(c.melt[i]||0)-.0025);
+      const d=c.deg[i],x=c.x[i],f=c.flash[i],m=c.melt[i]=Math.max(0,(c.melt[i]||0)-.0025);let on=i<al,y=c.y[i];
+      if(c.intro){const ti=nowMs-c.intro.start-T_IN-i*T_STEP,p=clamp(ti/T_LAND,0,1),e=p*p*(3-2*p),ys=yOfIdx(c.base+(d===REST?0:d));on=ti>=0;y=c.y[i]+(ys-c.y[i])*e*(1-c.intro.back)}
       const r=r0*(i===0?1.25:.7+.3*c.accent[i])*(1+f*.35), c2=PAL[(c.slot+1+(i%3))%PAL.length];
       const shape=(rr)=>{g.beginPath();if(tri){for(let k=0;k<3;k++){const t=-Math.PI/2+k*2.094+ang;g[k?'lineTo':'moveTo'](x+Math.cos(t)*rr*1.25,y+Math.sin(t)*rr*1.25)}g.closePath()}else g.arc(x,y,rr,0,6.283)};
       if(d===REST){g.globalAlpha=(on?.6:.25)*a;g.strokeStyle='#ece9e4';g.lineWidth=1.1;shape(r*.5);g.stroke();continue}
@@ -342,7 +397,26 @@ function frame(){
     g.globalCompositeOperation='screen';
   }
   g.globalCompositeOperation='source-over';
-  if(cur&&cur.length>1){g.globalAlpha=.9;g.strokeStyle='#ece9e4';g.lineWidth=1.6;path(cur);g.stroke()}
+  {const st=guideStep(),reading=cells.some(c=>c.intro),gd=reading?['Each point of your line lands on a note. Then it begins, slowly',null]:GUIDE[st];if(guideEl.textContent!==gd[0])guideEl.textContent=gd[0];
+    if(gd[1]&&!cur){const gp=ghostPts(gd[1]),ph=(performance.now()/2600)%1;g.globalAlpha=.3;g.strokeStyle='#ece9e4';g.lineWidth=1.2;g.setLineDash([2,9]);path(gp);g.stroke();g.setLineDash([]);
+      const k=Math.min(gp.length-1,Math.floor(ph*gp.length)),p=gp[k];g.globalAlpha=.8*Math.sin(Math.PI*ph);g.fillStyle='#ece9e4';g.beginPath();g.arc(p.x,p.y,4,0,6.283);g.fill()}}
+  // the keys
+  {const want=started&&harmBar>=0&&barAt(now)-harmBar>=1.5&&cells.filter(c=>!c.dying).length>=BASS_AT-1?1:0;keysA+=(want-keysA)*.04;
+    if(keysA>.02){g.globalCompositeOperation='screen';for(let i=0;i<NK;i++){const k=keyBox(i),f=kflash[i],col=PAL[i%PAL.length],c2=PAL[(i+3)%PAL.length],r=k.r*(1+f*.25),kind=i%4;kflash[i]=f*.9;
+      g.globalAlpha=.3*keysA;g.fillStyle=rgba(col,1);g.beginPath();g.arc(k.x,k.y,r*1.32,0,6.283);g.fill();
+      g.globalAlpha=.95*keysA;g.fillStyle=rgba(col,1);g.beginPath();
+      if(kind===0)g.arc(k.x,k.y,r,0,6.283);
+      else if(kind===1){for(let q=0;q<3;q++){const t=-Math.PI/2+q*2.094;g[q?'lineTo':'moveTo'](k.x+Math.cos(t)*r*1.18,k.y+r*.12+Math.sin(t)*r*1.18)}g.closePath()}
+      else if(kind===2){g.save();g.translate(k.x,k.y);g.rotate(.2);g.rect(-r*.86,-r*.86,r*1.72,r*1.72);g.restore()}
+      else g.arc(k.x,k.y+r*.3,r*1.05,Math.PI,0);
+      g.fill();
+      g.globalCompositeOperation='source-over';g.globalAlpha=.9*keysA;g.fillStyle=rgba(c2,1);g.beginPath();g.arc(k.x+(kind===2?r*.2:0),k.y+(kind===3?-r*.15:0),r*.3,0,6.283);g.fill();
+      g.strokeStyle='#ece9e4';g.lineWidth=1;g.globalAlpha=.45*keysA;g.beginPath();g.moveTo(k.x-r*1.2,k.y+r*1.25);g.lineTo(k.x+r*1.2,k.y+r*1.05);g.stroke();
+      if(f>.02){g.globalAlpha=.7*f*keysA;g.beginPath();g.arc(k.x,k.y,r*1.3+(1-f)*r*2,0,6.283);g.stroke()}
+      g.globalCompositeOperation='screen'}
+      g.globalCompositeOperation='source-over'}}
+  if(cur&&cur.length>1){const sp=smooth(cur),dt=Math.max(1,cur[cur.length-1].t-cur[0].t);let L=0;for(let i=1;i<sp.length;i++)L+=Math.hypot(sp[i].x-sp[i-1].x,sp[i].y-sp[i-1].y);
+    g.globalCompositeOperation='screen';brush(sp,bodyOf(sp[0].y,clamp(L/dt/1.1,0,1)),PAL[nextSlot()],.95,0,0,0);g.globalCompositeOperation='source-over'}
   g.globalAlpha=1;
 }
 requestAnimationFrame(frame);ui();
