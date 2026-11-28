@@ -49,7 +49,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 <canvas id="cv" aria-label="Drawing surface: each line you draw becomes a musical pattern"></canvas>
 <header class="top"><a href="../">Francesco Coia</a><div class="acts"><button type="button" id="undo" hidden>Undo</button><button type="button" id="clear" hidden>Clear</button></div></header>
 <div class="intro" id="intro"><small>Compose with me</small><h1>Draw<br>a line</h1><p>Your line becomes a pattern. Height is pitch, length is how many notes, a quick hand plays more of them. Low notes are large and slow, high ones small and quick; triangles move in threes. At first each line is on its own. At four lines the bass comes in, and little by little they all start to follow the harmony.</p><p class="no">No AI. Nothing here is generated: only rules and chance, shaped by my taste.</p><button type="button" id="start">Tap for sound</button></div>
-<footer class="foot"><p class="guide" id="guide"></p><div class="row"><span><span id="noai">No AI · rules and chance</span> · <span id="ver">v18 · 28.11 15:49</span></span><b><span id="count"></span></b><span id="prog" hidden></span><span id="chord" hidden></span></div><div class="line"><i id="bar"></i></div></footer>
+<footer class="foot"><p class="guide" id="guide"></p><div class="row"><span><span id="noai">No AI · rules and chance</span> · <span id="ver">v19 · 28.11 16:02</span></span><b><span id="count"></span></b><span id="prog" hidden></span><span id="chord" hidden></span></div><div class="line"><i id="bar"></i></div></footer>
 <script>
 /* Cells: the rules of the CELLULE engine in residuo (Generative.h), drawn by hand.
    A line = a cell: a short figure of scale degrees from an anchor note, with its own length and step. */
@@ -58,7 +58,7 @@ const SCALE=[0,2,4,5,7,9,11];                     // C major / A minor: the whol
 const STEP=[2,1,.5,1/3,.25];                      // beats per step: 1/2, 1/4, 1/8, 1/8T, 1/16
 const BPM=58, BEAT=60/BPM, BARBEATS=4, BAR=BARBEATS*BEAT, EVOLVE_BARS=2, SWELL_IN=2, SWELL_OUT=3;
 const CALM_BARS=4, SLOW=[0,0,1,1,2];                   // every line begins at half its speed, for four bars
-const T_IN=350,T_LAND=260,T_HOLD=1400,T_OUT=600;   // reading the first line onto the staff
+const T_IN=160,T_LAND=200,T_HOLD=500,T_OUT=450;   // reading the first line onto the staff
 const BASS_AT=4, FOLLOW_BARS=10, PAD_AFTER=6, SUB_AFTER=12;      // the bass joins at four lines; the lines learn the harmony over ten bars; the pad comes six bars after the bass
 // the Sakamoto shelf of chord loops in residuo (ChordLoop.h). One is picked at every start and every clear.
 const PROGS=[
@@ -133,47 +133,41 @@ const metrics=c=>{let n=0,mv=0,prev=REST,first=REST,last=REST,r=0;for(let i=0;i<
 function cellFromStroke(pts){
   // length along the line
   let L=0;const acc=[0];for(let i=1;i<pts.length;i++){L+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);acc.push(L)}
-  const dt=Math.max(1,pts[pts.length-1].t-pts[0].t), energy=clamp(L/dt/1.1,0,1);            // drawing fast = playing loud
-  const unit=clamp(Math.min(W,H)*.16,62,140), len=clamp(Math.round(L/unit)+1,2,6);   // few notes: a line is a gesture, not a scale
-  const at=u=>{const tL=u*L;let k=1;while(k<acc.length-1&&acc[k]<tL)k++;const a=pts[k-1],b=pts[k],f=(tL-acc[k-1])/Math.max(1e-6,acc[k]-acc[k-1]);return{x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f,t:a.t+(b.t-a.t)*f}};
-  const dots=[];for(let i=0;i<len;i++)dots.push(at(len===1?0:i/(len-1)));
+  const N=pts.length,dt=Math.max(1,pts[N-1].t-pts[0].t), energy=clamp(L/dt/1.1,0,1);            // drawing fast = playing loud
+  const unit=clamp(Math.min(W,H)*.15,58,130);
+  const at=tL=>{let k=1;while(k<acc.length-1&&acc[k]<tL)k++;const a=pts[k-1],b=pts[k],f=clamp((tL-acc[k-1])/Math.max(1e-6,acc[k]-acc[k-1]),0,1);return{x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f,t:a.t+(b.t-a.t)*f}};
+  // the notes sit where the line says something: where it starts, at every peak and every valley, where it ends
+  const prom=Math.max(9,unit*.16);let marks=[{s:0,ext:true}],trend=0,e=0;
+  for(let i=1;i<N;i++){const y=pts[i].y;
+    if(trend===0){if(Math.abs(y-pts[0].y)>prom){trend=Math.sign(y-pts[0].y);e=i}}
+    else if(trend>0){if(y>pts[e].y)e=i;else if(pts[e].y-y>prom){marks.push({s:acc[e],ext:true});trend=-1;e=i}}
+    else{if(y<pts[e].y)e=i;else if(y-pts[e].y>prom){marks.push({s:acc[e],ext:true});trend=1;e=i}}}
+  marks.push({s:L,ext:true});
+  // long stretches between two of them get a note on the way; points too close become one
+  {const o=[marks[0]];for(let i=1;i<marks.length;i++){const gap=marks[i].s-marks[i-1].s,k=Math.max(0,Math.round(gap/(unit*1.25))-1);for(let j=1;j<=k;j++)o.push({s:marks[i-1].s+gap*j/(k+1),ext:false});o.push(marks[i])}marks=o}
+  for(let i=marks.length-2;i>0;i--)if(marks[i].s-marks[i-1].s<unit*.42||marks[i+1].s-marks[i].s<unit*.42){if(!marks[i].ext||marks.length>3)marks.splice(i,1)}
+  while(marks.length>7){let w=1,g=1e9;for(let i=1;i<marks.length-1;i++){const d=marks[i+1].s-marks[i-1].s-(marks[i].ext?-unit:0);if(d<g){g=d;w=i}}marks.splice(w,1)}
+  const dots=marks.map(m=>({...at(m.s),ext:m.ext}));
   const lift=(history.length===0&&matchMedia('(max-width:760px)').matches)?7:0;      // the first line, drawn in the marked space on a phone, sits an octave higher
-  const base=pent(clamp(idxOfY(dots[0].y)+lift,IDX_LOW,IDX_HIGH-4),0), anchor=noteOfIdx(base);
-  const low=anchor<60, high=anchor>=72, salt=cells.filter(c=>!c.dying).length;
-  const c={id:++serial,pts,len,base,anchor,energy,low,high,deg:[],accent:[],x:[],y:[],born:null,phase:0,fade:0,dying:false,dieAt:0,flash:[],ev:'',evT:0,last:-1,lastNote:0,lastUntil:0};
-  const rnd=c.rnd=rngOf(c.id*2654435761+base*97+salt*13);
-  for(let i=0;i<len;i++){const d=clamp(idxOfY(dots[i].y),IDX_LOW,IDX_HIGH)-base;c.deg.push(i===0?0:clamp(d,-7,7));c.y.push(dots[i].y);c.accent.push(i===0?1:.62+.25*rnd());c.x.push(dots[i].x)}
-  // below middle C: only the note and its octaves, wide and slow (bassDeg)
-  if(low)for(let i=1;i<len;i++)c.deg[i]=Math.abs(c.deg[i])>=4?(c.deg[i]>0?7:-7):(Math.abs(c.deg[i])>=2?(c.deg[i]>0?4:-3):0);
-  // up high: more silence (it moves, it does not fill everything)
-  if(high)for(let i=1;i<len;i++)if(rnd()<.27)c.deg[i]=REST;
-  // soft hand = fewer notes
-  if(energy<.6)for(let i=1;i<len;i++)if(c.deg[i]!==REST&&rnd()<(.6-energy)*.7)c.deg[i]=REST;
-  if(!low)beautify(c,dots.map((p,i)=>i?dots[i-1].y-p.y:0));
-  applyRules(c);const drawn=c.deg.map((d,i)=>d===REST?pent(clamp(idxOfY(dots[i].y)+lift,IDX_LOW,IDX_HIGH),0)-base:d);if(low)for(let i=1;i<len;i++)drawn[i]=0;
+  // each one takes the nearest of five notes (no fourth, no seventh). Nothing else is changed: the score is the drawing
+  const idx=dots.map((p,i)=>pent(clamp(idxOfY(p.y)+lift,IDX_LOW,IDX_HIGH-2),i?dots[i-1].y-p.y:0));
+  // where the line stays level the note is held instead of struck again; where the hand lingered it lasts longer; the last one is long
+  const dts=[];for(let i=0;i<dots.length-1;i++)dts.push(Math.max(1,dots[i+1].t-dots[i].t));const med=dts.slice().sort((p,q)=>p-q)[dts.length>>1]||1;
+  const keep=[];for(let i=0;i<dots.length;i++){const slow=i<dts.length&&dts[i]>1.5*med?1:0;
+    if(keep.length&&idx[i]===keep[keep.length-1].idx){const k=keep[keep.length-1];k.dur=Math.min(3,k.dur+1+slow)}else keep.push({idx:idx[i],dur:1+slow,p:dots[i]})}
+  keep[keep.length-1].dur=Math.max(2,keep[keep.length-1].dur);
+  const len=keep.length,base=keep[0].idx,anchor=noteOfIdx(base),low=anchor<60,high=anchor>=72,salt=cells.filter(c=>!c.dying).length;
+  const c={id:++serial,pts,len,base,anchor,energy,low,high,lift,deg:[],dur:[],accent:[],x:[],y:[],born:null,phase:0,fade:0,dying:false,dieAt:0,flash:[],ev:'',evT:0,last:-1,lastNote:0,lastUntil:0};
+  c.rnd=rngOf(c.id*2654435761+base*97+salt*13);
+  let top=0;for(let i=1;i<len;i++)if(keep[i].idx>keep[top].idx)top=i;
+  for(let i=0;i<len;i++){c.deg.push(keep[i].idx-base);c.dur.push(keep[i].dur);c.x.push(keep[i].p.x);c.y.push(keep[i].p.y);c.accent.push(i===0?1:i===top?.95:.7)}   // the first note and the highest one are leaned on
+  if(len===1){c.deg.push(REST);c.dur.push(1);c.x.push(pts[N-1].x);c.y.push(pts[N-1].y);c.accent.push(.7);c.len=2}
   // the step: slow at the bottom, eighths in the middle, sixteenths at the top
   let code=low?1:(high?4:2);
   if(!low&&salt%3===2)code=3;                    // two against three: one companion in triplets
-  code+=energy<.2?-1:0;c.code=clamp(code,0,4);
-  // contrast with the cells already alive: try a few variants, keep the most different
-  const others=cells.filter(o=>!o.dying);
-  if(others.length){let best=null,bs=-1e9;
-    for(let k=0;k<6;k++){const t={...c,deg:c.deg.slice()};
-      if(k===1||k===4)t.code=clamp(c.code+(c.code>=3?-1:1),0,4);
-      if(k===2||k===4)for(let i=1;i<t.len;i+=2)if(t.deg[i]!==REST&&i!==(t.len>>1))t.deg[i]=REST;
-      if(k===3||k===5)for(let i=2;i<t.len;i+=3)if(t.deg[i]!==REST)t.deg[i]=REST;
-      if(k===5&&!low)t.code=3;
-      const mt=metrics(t);let sc=k===0?.35:0;                                   // the drawing as it is counts for something
-      for(const o of others){const mo=metrics(o);sc+=Math.abs(mt.density-mo.density)/Math.max(.5,mt.density,mo.density);sc+=Math.min(1,Math.abs(mt.motion-mo.motion)/2);sc+=mt.dir!==mo.dir?.6:0;
-        if(t.len===o.len){let x=mt.rhythm^mo.rhythm,b=0;while(x){b+=x&1;x>>=1}sc+=.5*b/t.len}else sc+=.4}
-      sc/=others.length;if(sc>bs){bs=sc;best=t}}
-    c.deg=best.deg;c.code=best.code}
-  // never thinner than half of what was drawn
-  {const want=Math.ceil(c.len/2);let have=c.deg.filter(d=>d!==REST).length;for(let i=1;i<c.len&&have<want;i++)if(c.deg[i]===REST){c.deg[i]=drawn[i];have++}applyRules(c)}
-  // durations: where the hand lingered the note is long; the last note of a figure is always long
-  {const dts=[];for(let i=0;i<len-1;i++)dts.push(Math.max(1,dots[i+1].t-dots[i].t));const sorted=dts.slice().sort((p,q)=>p-q),med=sorted[sorted.length>>1]||1;let mx=0;for(let i=1;i<dts.length;i++)if(dts[i]>dts[mx])mx=i;
-    c.dur=[];for(let i=0;i<len;i++)c.dur.push(i===len-1||(i<dts.length&&(dts[i]>1.45*med||(len>=4&&i===mx)))?2:1)}
-  c.activeLen=Math.min(c.len,2+(rnd()<.5?1:0));   // additive: it starts short and grows
+  code+=energy<.2?-1:0;code=clamp(code,0,4);
+  if(cells.some(o=>!o.dying&&o.code===code&&o.len===c.len))code=clamp(code+(code>1?-1:1),0,4);      // two lines never walk in step: same length and same speed, one gives way
+  c.code=code;c.activeLen=c.len;
   c.flash=new Array(MAXLEN).fill(0);c.melt=new Array(MAXLEN).fill(0);
   c.slot=nextSlot();
   return c;
@@ -302,12 +296,11 @@ setInterval(schedule,25);
 
 /* ---- keys: seven shapes, five notes. They move with the harmony, so they are always right ---- */
 const NK=7;let keysA=0,duck=0,keyCount=3,presses=0,turn=0;const kflash=new Array(NK).fill(0),kA=new Array(NK).fill(0);
-function keyNotes(ch,k=keyCount){                           // three notes of the chord to begin with; then the rest of the five, then the octave
-  let pcs=ch.pcs.slice(0,5);for(const p of SCALE){if(pcs.length>=5)break;if(pcs.includes(p))continue;if(pcs.some(q=>{const d=(p-q+12)%12;return d===1||d===11}))continue;pcs.push(p)}
-  pcs=pcs.slice(0,Math.min(k,5));const o=[];let n=59;while(o.length<k){n++;if(pcs.includes(n%12))o.push(n)}return o}
-function keyBox(i){const k=Math.max(3,keyCount),r=Math.min(30,(W-44)/k/2-3),gap=Math.min(r*2+18,(W-44)/k),x0=W/2-gap*(k-1)/2;return{x:x0+i*gap,y:H-(padB-KEYBAND)-KEYBAND/2-2,r}}
-function keyAt(x,y){if(keysA<.5)return -1;for(let i=0;i<keyCount;i++){const k=keyBox(i);if(Math.hypot(x-k.x,y-k.y)<k.r+7)return i}return -1}
-function playKey(i){if(!ac||keysA<.5||i>=keyCount)return;const ch=chordAt(ac.currentTime+.02)||CHORDS[0],n=keyNotes(ch)[i],k=keyBox(i),col=PAL[i%PAL.length];
+const KEYNOTE=[60,62,64,67,69,72,74],KEYORDER=[2,3,4,1,5,0,6];   // each shape is one note, always: C D E G A C D. Three to begin with (E G A), then the others
+const keyOn=i=>KEYORDER.indexOf(i)<keyCount;
+function keyBox(i){const r=Math.min(27,(W-2*22)/NK/2-3),gap=Math.min(r*2+16,(W-44)/NK),x0=W/2-gap*(NK-1)/2;return{x:x0+i*gap,y:H-(padB-KEYBAND)-KEYBAND/2-2,r}}
+function keyAt(x,y){if(keysA<.5)return -1;for(let i=0;i<NK;i++){if(!keyOn(i))continue;const k=keyBox(i);if(Math.hypot(x-k.x,y-k.y)<k.r+7)return i}return -1}
+function playKey(i){if(!ac||keysA<.5||!keyOn(i))return;const n=KEYNOTE[i],k=keyBox(i),col=PAL[i%PAL.length];
   voice(n,ac.currentTime+.005,.9,{hold:1.6,release:3.2,lp:3400,pan:(i/(NK-1)-.5)*.8,send:1.2});kflash[i]=1;duck=1;
   // what you play stays in the air
   const bx=(k.x/W)*bgc.width,by=(.2+.55*(1-i/(NK-1))+(Math.random()-.5)*.12)*bgc.height,R=bgc.width*(.22+Math.random()*.16),gr=bg.createRadialGradient(bx,by,0,bx,by,R);
@@ -332,23 +325,23 @@ function ui(){const n=cells.filter(c=>!c.dying).length;undoB.hidden=clearB.hidde
 let ready=false;const startB=document.getElementById('start');
 function begin(){if(ready)return;audio();unlock();ready=true;startB.classList.add('gone');if(ac)voice(72,ac.currentTime+.05,.5,{attack:.02,hold:.8,release:2.4,lp:2200});try{window.umami&&umami.track('Sound on')}catch(_){}}
 startB.addEventListener('click',begin);
-cv.addEventListener('pointerdown',e=>{if(!ready)return;const ki=keyAt(e.clientX,e.clientY);if(ki>=0){playKey(ki);return}cv.setPointerCapture(e.pointerId);cur=[{x:e.clientX,y:e.clientY,t:performance.now()}]});
-cv.addEventListener('pointermove',e=>{if(!cur)return;const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];for(const m of evs.length?evs:[e]){const l=cur[cur.length-1];if(Math.hypot(m.clientX-l.x,m.clientY-l.y)>2.5)cur.push({x:m.clientX,y:m.clientY,t:performance.now()})}});
+cv.addEventListener('pointerdown',e=>{if(!ready)return;const ki=keyAt(e.clientX,e.clientY);if(ki>=0){playKey(ki);return}if(e.clientY>H-padB-20)return;/* the bottom band belongs to the shapes you play */cv.setPointerCapture(e.pointerId);cur=[{x:e.clientX,y:e.clientY,t:performance.now()}]});
+cv.addEventListener('pointermove',e=>{if(!cur)return;const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];for(const m of evs.length?evs:[e]){const l=cur[cur.length-1];const my=Math.min(m.clientY,H-padB-32);if(Math.hypot(m.clientX-l.x,my-l.y)>2.5)cur.push({x:m.clientX,y:my,t:performance.now()})}});
 cv.addEventListener('click',()=>{if(!ready)begin()});
 function end(){if(!cur)return;const pts=cur;cur=null;audio();unlock();
   let L=0;for(let i=1;i<pts.length;i++)L+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
   if(L<26)return;                                                    // a tap is not a line
   const alive=cells.filter(c=>!c.dying);
   if(alive.length>=MAXCELLS&&ac){const old=alive[0];old.dying=true;old.dieAt=ac.currentTime}   // the oldest leaves, slowly
-  const c=cellFromStroke(smooth(pts));if(drawn===0){c.activeLen=c.len;c.intro=staffFor(c)}cells.push(c);history.push(c.id);drawn++;intro.classList.add('gone');document.querySelector('.foot').classList.add('gone');ui();
+  const c=cellFromStroke(smooth(pts));if(drawn===0)c.intro=staffFor(c);cells.push(c);history.push(c.id);drawn++;intro.classList.add('gone');document.querySelector('.foot').classList.add('gone');ui();
   try{window.umami&&umami.track('Cell drawn',{cells:cells.filter(c=>!c.dying).length})}catch(_){}}
 cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
-function staffFor(c){                                        // one staff, where the line is: treble if it lives above middle C, bass below
-  const sp=clamp(Math.min(W,H)*.024,11,20),treble=c.anchor>=60,mid=idxOfNote(treble?71:50);
-  let my=0;for(const y of c.y)my+=y;my/=c.len;const cy=clamp(my,padT+6*sp,H-padB-6*sp);
-  const need=Math.min(W*.86,Math.max(W*.56,c.len*sp*4.2)),cx=clamp((Math.min(...c.x)+Math.max(...c.x))/2,W*.07+need/2,W*.93-need/2),x0=cx-need/2,x1=cx+need/2;
-  const sx=[],sy=[],pos=[];for(let i=0;i<c.len;i++){const d=c.deg[i]===REST?0:c.deg[i],p=c.base+d-mid;pos.push(p);sx.push(x0+sp*1.6+(i+.5)*(need-sp*2.4)/c.len);sy.push(cy-p*sp/2)}
-  return{start:performance.now(),land:new Array(c.len).fill(0),doneAt:0,sp,cy,x0,x1,sx,sy,pos}}
+function staffFor(c){                                        // one staff drawn through the line, at the true height of its notes: the points only settle onto the nearest line or space
+  const D=(H-padT-padB)/(IDX_HIGH-IDX_LOW),sp=2*D,ids=c.deg.filter(d=>d!==REST).map(d=>c.base+d),ctr=(Math.min(...ids)+Math.max(...ids))/2,par=((idxOfNote(71)%2)+2)%2;
+  let mid=Math.round(ctr);if((((mid%2)+2)%2)!==par)mid+=ctr>=mid?1:-1;
+  const cy=yOfIdx(mid-c.lift),x0=Math.max(10,Math.min(...c.x)-sp*.8),x1=Math.min(W-10,Math.max(...c.x)+sp*.8);
+  const sx=c.x.slice(),sy=[],pos=[],land=[],t=performance.now();for(let i=0;i<c.len;i++){const d=c.deg[i]===REST?0:c.deg[i];pos.push(c.base+d-mid);sy.push(yOfIdx(c.base+d-c.lift));land.push(t+T_IN+i*110)}
+  return{start:t,land,heard:new Array(c.len).fill(0),doneAt:0,sp,h:clamp(sp*.3,9,15),cy,x0,x1,sx,sy,pos}}
 function smooth(p){if(p.length<3)return p;                       // even spacing, then three soft passes: the hand's tremor goes, the gesture stays
   let L=0;const acc=[0];for(let i=1;i<p.length;i++){L+=Math.hypot(p[i].x-p[i-1].x,p[i].y-p[i-1].y);acc.push(L)}
   const n=Math.max(8,Math.min(140,Math.round(L/9)));let o=[],k=1;
@@ -371,7 +364,7 @@ const GUIDE=[
  ['Keep playing. What you play stays in the air as colour',null],
  ['A seventh line lets the oldest one go. Clear starts again',null]];
 let drawn=0,zoneA=1;const guideEl=document.getElementById('guide'),phoneQ=matchMedia('(max-width:760px)');
-function zone(){const r=intro.getBoundingClientRect(),top=r.bottom+22,bot=H-(padB-KEYBAND)-14;return{x:22,y:top,w:W-44,h:Math.max(120,bot-top)}}
+function zone(){const r=intro.getBoundingClientRect(),top=r.bottom+22,bot=H-padB-24;return{x:22,y:top,w:W-44,h:Math.max(120,bot-top)}}
 function guideStep(){const n=cells.filter(c=>!c.dying).length;return Math.min(GUIDE.length-1,Math.max(n,Math.min(drawn,4)))}
 function ghostPts(spec){const [x0,y0,x1,y1,amp]=spec,o=[];for(let i=0;i<=40;i++){const t=i/40;o.push({x:W*(x0+(x1-x0)*t),y:H*(y0+(y1-y0)*t+amp*Math.sin(t*6.283))})}return o}
 function kill(c){if(!c||c.dying)return;c.dying=true;c.dieAt=ac?ac.currentTime-(SWELL_OUT-1)*BAR:0}
@@ -384,7 +377,7 @@ function path(pts){g.beginPath();g.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.l
 function frame(){
   requestAnimationFrame(frame);
   const now=ac?ac.currentTime:0;
-  while(queue.length&&queue[0].t<=now){const q=queue.shift();if(q.evolve)evolve();else if(q.c){if(q.c.intro&&!q.c.intro.land[q.step])q.c.intro.land[q.step]=performance.now();if(q.rest)continue;q.c.flash[q.step]=1;q.c.melt[q.step]=Math.min(1,(q.c.melt[q.step]||0)+.2);q.c.last=q.step}}
+  while(queue.length&&queue[0].t<=now){const q=queue.shift();if(q.evolve)evolve();else if(q.c){if(q.c.intro)q.c.intro.heard[q.step]=1;if(q.rest)continue;q.c.flash[q.step]=1;q.c.melt[q.step]=Math.min(1,(q.c.melt[q.step]||0)+.2);q.c.last=q.step}}
   queue.sort((a,b)=>a.t-b.t);
   g.clearRect(0,0,W,H);
   g.globalAlpha=1;g.imageSmoothingEnabled=true;g.drawImage(bgc,0,0,W,H);
@@ -400,13 +393,14 @@ function frame(){
     g.globalAlpha=1;field(k,fr*lv);if(fr<1)field(k-1,(1-fr)*lv)}}
   const tms=performance.now()/1000,nowMs=performance.now();
   for(const c of cells){if(!c.intro)continue;const I=c.intro,el=nowMs-I.start;
-    if(!I.doneAt&&I.land.every(v=>v)&&nowMs-Math.max(...I.land)>T_LAND)I.doneAt=nowMs;
+    if(!I.doneAt&&(I.heard.every(v=>v)||el>9000))I.doneAt=nowMs;
     I.back=I.doneAt?clamp((nowMs-I.doneAt-T_HOLD)/T_OUT,0,1):0;I.a=Math.min(1,el/T_IN)*(1-I.back);
     if(I.back>=1||c.dying){c.intro=null;continue}
     {const I=c.intro;g.strokeStyle='#ece9e4';g.lineWidth=1;g.globalAlpha=.6*I.a;
       for(let k=-2;k<=2;k++){const y=I.cy+k*I.sp;g.beginPath();g.moveTo(I.x0,y);g.lineTo(I.x1,y);g.stroke()}
       g.lineWidth=1.6;g.beginPath();g.moveTo(I.x0,I.cy-2*I.sp);g.lineTo(I.x0,I.cy+2*I.sp);g.moveTo(I.x1,I.cy-2*I.sp);g.lineTo(I.x1,I.cy+2*I.sp);g.stroke()}
   }
+  g.save();g.beginPath();g.rect(0,0,W,H-padB);g.clip();          // nothing drawn by a line may enter the band of the shapes
   g.globalCompositeOperation='screen';
   for(const c of cells){
     const age=c.born===null?0:Math.max(0,(now-c.born)/BAR),fin=Math.min(1,.35+age/SWELL_IN*.65),fout=c.dying?Math.max(0,1-(now-c.dieAt)/(SWELL_OUT*BAR)):1,a=c.intro?1:fin*fout;
@@ -426,10 +420,10 @@ function frame(){
     const r0=5+big*20, tri=c.code===3;
     for(let i=0;i<c.len;i++){
       const d=c.deg[i],f=c.flash[i],m=c.melt[i]=Math.max(0,(c.melt[i]||0)-.0025);let on=i<al,x=c.x[i],y=c.y[i];
-      if(c.intro){const I=c.intro,ti=I.land[i]?nowMs-I.land[i]:-1,p=clamp(ti/T_LAND,0,1),e=p*p*(3-2*p),mix=e*(1-I.back);on=true;x+=(I.sx[i]-x)*mix;y+=(I.sy[i]-y)*mix;
-        if(mix>.5){const sp=I.sp,k=(mix-.5)*2,cl=i%2?PAL[(c.slot+1+(i%3))%PAL.length]:col,ps=I.pos[i];
+      if(c.intro){const I=c.intro,ti=nowMs-I.land[i],p=clamp(ti/T_LAND,0,1),e=p*p*(3-2*p),mix=e*(1-I.back);on=true;x+=(I.sx[i]-x)*mix;y+=(I.sy[i]-y)*mix;
+        if(mix>.5){const sp=I.h,SP=I.sp,k=(mix-.5)*2,cl=i%2?PAL[(c.slot+1+(i%3))%PAL.length]:col,ps=I.pos[i];
           g.globalCompositeOperation='source-over';g.strokeStyle='#ece9e4';g.lineWidth=1;g.globalAlpha=.6*k*a;
-          for(let q=6;q<=Math.abs(ps);q+=2){const ly=I.cy-Math.sign(ps)*q*sp/2;g.beginPath();g.moveTo(x-sp*1.1,ly);g.lineTo(x+sp*1.1,ly);g.stroke()}     // ledger lines
+          for(let q=6;q<=Math.abs(ps);q+=2){const ly=I.cy-Math.sign(ps)*q*SP/2;g.beginPath();g.moveTo(x-sp*1.5,ly);g.lineTo(x+sp*1.5,ly);g.stroke()}     // ledger lines
           if(d===REST){g.globalAlpha=.7*k*a;g.fillStyle='#ece9e4';g.fillRect(x-sp*.55,I.cy-sp*.45,sp*1.1,sp*.45)}
           else{g.globalAlpha=k*a;g.fillStyle=rgba(cl,1);g.save();g.translate(x,y);g.rotate(-.36);g.beginPath();g.ellipse(0,0,sp*.68*(1+f*.3),sp*.47*(1+f*.3),0,0,6.283);if(c.dur[i]===2){g.strokeStyle=rgba(cl,1);g.lineWidth=sp*.2;g.stroke()}else g.fill();g.restore();
             g.strokeStyle=rgba(cl,1);g.lineWidth=1.5;g.beginPath();if(ps<0){g.moveTo(x+sp*.6,y-sp*.12);g.lineTo(x+sp*.6,y-sp*3.4)}else{g.moveTo(x-sp*.6,y+sp*.12);g.lineTo(x-sp*.6,y+sp*3.4)}g.stroke();
@@ -448,6 +442,7 @@ function frame(){
       c.flash[i]=f*.91;
     }
     g.globalCompositeOperation='source-over';
+  g.restore();
     if(c.ev&&performance.now()-c.evT<2600){const k=1-(performance.now()-c.evT)/2600;g.globalAlpha=.8*k*a;g.fillStyle='#ece9e4';g.font='300 9.5px Unbounded,system-ui,sans-serif';
       const tx=clamp(c.x[0],20,W-110),ty=clamp(c.y[0]-r0*1.4-14,padT,H-padB);g.fillText(c.ev.toUpperCase().split('').join(' '),tx,ty)}
     g.globalCompositeOperation='screen';
@@ -464,7 +459,7 @@ function frame(){
       const k=Math.min(gp.length-1,Math.floor(ph*gp.length)),p=gp[k];g.globalAlpha=.8*Math.sin(Math.PI*ph);g.fillStyle='#ece9e4';g.beginPath();g.arc(p.x,p.y,4,0,6.283);g.fill()}}
   // the keys
   {const want=started&&harmBar>=0&&barAt(now)-harmBar>=1.5&&cells.filter(c=>!c.dying).length>=BASS_AT-1?1:0;keysA+=(want-keysA)*.04;
-    if(keysA>.02){g.globalCompositeOperation='screen';for(let i=0;i<NK;i++){kA[i]+=((i<keyCount?1:0)-kA[i])*.06;if(kA[i]<.02)continue;const k=keyBox(i),f=kflash[i],col=PAL[i%PAL.length],c2=PAL[(i+3)%PAL.length],r=k.r*(1+f*.25)*(.6+.4*kA[i]),kind=i%4,keysA0=keysA;keysA=keysA0*kA[i];kflash[i]=f*.9;
+    if(keysA>.02){g.globalCompositeOperation='screen';for(let i=0;i<NK;i++){kA[i]+=((keyOn(i)?1:0)-kA[i])*.06;if(kA[i]<.02)continue;const k=keyBox(i),f=kflash[i],col=PAL[i%PAL.length],c2=PAL[(i+3)%PAL.length],r=k.r*(1+f*.25)*(.6+.4*kA[i]),kind=i%4,keysA0=keysA;keysA=keysA0*kA[i];kflash[i]=f*.9;
       g.globalAlpha=.3*keysA;g.fillStyle=rgba(col,1);g.beginPath();g.arc(k.x,k.y,r*1.32,0,6.283);g.fill();
       g.globalAlpha=.95*keysA;g.fillStyle=rgba(col,1);g.beginPath();
       if(kind===0)g.arc(k.x,k.y,r,0,6.283);
