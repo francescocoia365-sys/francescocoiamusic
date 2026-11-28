@@ -46,7 +46,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 <canvas id="cv" aria-label="Drawing surface: each line you draw becomes a musical pattern"></canvas>
 <header class="top"><a href="../">Francesco Coia</a><div class="acts"><button type="button" id="undo" hidden>Undo</button><button type="button" id="clear" hidden>Clear</button></div></header>
 <div class="intro" id="intro"><small>Compose with me</small><h1>Draw<br>a line</h1><p>Your line becomes a pattern. Height is pitch, length is how many notes, a quick hand plays more of them. Low notes are large and slow, high ones small and quick; triangles move in threes. At first each line is on its own. At four lines the bass comes in, and little by little they all start to follow the harmony.</p><p class="no">No AI. Nothing here is generated: only rules and chance, shaped by my taste.</p></div>
-<footer class="foot"><p class="guide" id="guide"></p><div class="row"><span><span id="noai">No AI · rules and chance</span> · <span id="ver">v15 · 28.11 15:39</span></span><b><span id="count"></span></b><span id="prog" hidden></span><span id="chord" hidden></span></div><div class="line"><i id="bar"></i></div></footer>
+<footer class="foot"><p class="guide" id="guide"></p><div class="row"><span><span id="noai">No AI · rules and chance</span> · <span id="ver">v16 · 28.11 15:42</span></span><b><span id="count"></span></b><span id="prog" hidden></span><span id="chord" hidden></span></div><div class="line"><i id="bar"></i></div></footer>
 <script>
 /* Cells: the rules of the CELLULE engine in residuo (Generative.h), drawn by hand.
    A line = a cell: a short figure of scale degrees from an anchor note, with its own length and step. */
@@ -234,7 +234,7 @@ function voice(note,when,gainv,opt={}){                      // one piano note; 
   node.connect(out);if(opt.send!==0){const sd=ac.createGain();sd.gain.value=opt.send===undefined?1:opt.send;node.connect(sd).connect(wet)}
   if(k!==null)src.start(when,opt.offset||0);else src.start(when);src.stop(when+atk+hold+rel+.1);
 }
-const pluck=(note,when,vel,dur,pan)=>voice(note,when,PLUCK*1.2*vel,{attack:.05,offset:.04,hold:Math.max(.7,dur*1.8),release:3.2,lp:380+700*vel,soft:true,pan});   // the patterns: no hammer, a closed, felted tone
+const pluck=(note,when,vel,dur,pan,dark=0)=>voice(note,when,PLUCK*1.2*vel,{attack:.05,offset:.04,hold:Math.max(.7,dur*1.8),release:3.2,lp:(380+700*vel)*(1-.4*dark),soft:true,pan});   // the patterns: no hammer, a closed, felted tone
 function bass(ch,when,dur,lv){                               // a sub: a pure tone an octave under the lines, with a breath of its octave so small speakers hint at it
   const n=24+ch.bass+(ch.bass<4?12:0);                       // E1 .. Eb2, 41 to 78 Hz
   for(const [note,g0,type] of [[n,.075,'sine'],[n+12,.02,'sine']]){
@@ -283,10 +283,11 @@ function schedule(){
       if(c.codeNow!==c.code&&c.tNext>=c.switchAt-1e-6){c.codeNow=c.code;sb=STEP[c.code]*BEAT;c.ev='finds its pace';c.evT=performance.now()}
       const when=c.tNext,al=Math.max(1,c.activeLen),step=(c.pos+c.phase)%al,d=c.deg[step],du=c.dur[step]||1;
       const age=(when-c.born)/BAR,fin=Math.min(1,.6+age/SWELL_IN*.4),fout=c.dying?Math.max(0,1-(when-c.dieAt)/(SWELL_OUT*BAR)):1;
-      if(d!==REST&&fout>0&&when>=ac.currentTime-.01){
+      const room=keysA>.5&&step!==0&&c.pos%3===2;            // once you can play, the lines thin out: every third note is left out, never the first of a figure
+      if(d!==REST&&fout>0&&!room&&when>=ac.currentTime-.01){
         const n=fit(c,d,step,when),gate=(n<48?1.6:1)*.75*du;
-        const vel=clamp((.3+.5*c.energy)*c.accent[step]*fin*fout*(1-.5*duck),0,1);
-        pluck(n,when,vel,sb*gate,clamp((c.x[step]/W-.5)*1.2,-.7,.7));
+        const vel=clamp((.3+.5*c.energy)*c.accent[step]*fin*fout*(1-.5*duck)*(1-.2*keysA),0,1);
+        pluck(n,when,vel,sb*gate,clamp((c.x[step]/W-.5)*1.2,-.7,.7),keysA);
         c.lastNote=n;c.lastUntil=when+sb*gate;
         queue.push({t:when,c,step,vel})}
       else if(c.intro&&d===REST)queue.push({t:when,c,step,rest:true});
