@@ -42,7 +42,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 <canvas id="cv" aria-label="Drawing surface: each line you draw becomes a musical pattern"></canvas>
 <header class="top"><a href="../">Francesco Coia</a><div class="acts"><button type="button" id="undo" hidden>Undo</button><button type="button" id="clear" hidden>Clear</button></div></header>
 <div class="intro" id="intro"><small>Write with me</small><h1>Draw<br>a line</h1><p>Your line becomes a pattern. Height is pitch, length is how many notes, a quick hand plays more of them. Low notes are large and slow, high ones small and quick; triangles move in threes. At first each line is on its own. At four lines the bass comes in, and little by little they all start to follow the harmony.</p><p class="no">No AI. Nothing here is generated: only rules and chance, shaped by my taste.</p></div>
-<footer class="foot"><div class="row no"><span>No AI · rules and chance</span></div><div class="row"><span id="prog"></span><b><span id="count"></span><span id="chord"></span></b></div><div class="line"><i id="bar"></i></div></footer>
+<footer class="foot"><div class="row"><span>No AI · rules and chance</span><b><span id="count"></span></b><span id="prog" hidden></span><span id="chord" hidden></span></div><div class="line"><i id="bar"></i></div></footer>
 <script>
 /* Cells: the rules of the CELLULE engine in residuo (Generative.h), drawn by hand.
    A line = a cell: a short figure of scale degrees from an anchor note, with its own length and step. */
@@ -83,7 +83,7 @@ function rngOf(seed){let s=seed>>>0||1;return()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s
 
 const cv=document.getElementById('cv'),g=cv.getContext('2d');
 let W=0,H=0,DPR=1,padT=0,padB=0;
-function size(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);g.setTransform(DPR,0,0,DPR,0,0);padT=Math.max(70,H*.11);padB=Math.max(86,H*.11)}
+function size(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);g.setTransform(DPR,0,0,DPR,0,0);padT=Math.max(70,H*.11);padB=Math.max(64,H*.1)}
 addEventListener('resize',size);size();
 const yOfIdx=i=>padT+(1-(i-IDX_LOW)/(IDX_HIGH-IDX_LOW))*(H-padT-padB);
 const idxOfY=y=>Math.round(IDX_LOW+(1-(y-padT)/(H-padT-padB))*(IDX_HIGH-IDX_LOW));
@@ -293,8 +293,8 @@ function frame(){
   g.clearRect(0,0,W,H);
   g.lineCap='round';g.lineJoin='round';
   {const anyone=cells.filter(c=>!c.dying).length,ch=started?chordAt(now):null;
-    if(ch){const x=(((barAt(now)-harmBar)%LOOPBARS)+LOOPBARS)%LOOPBARS;chordEl.textContent=' · '+ch.n;progEl.textContent=prog[0];barEl.style.transform=`scaleX(${x/LOOPBARS})`}
-    else{chordEl.textContent='';barEl.style.transform='scaleX(0)';progEl.textContent=anyone?(anyone<BASS_AT?`the harmony joins at ${BASS_AT} lines`:prog[0]):''}}
+    if(ch){const x=(((barAt(now)-harmBar)%LOOPBARS)+LOOPBARS)%LOOPBARS;barEl.style.transform=`scaleX(${x/LOOPBARS})`}
+    else barEl.style.transform='scaleX(0)'}
   // the chord colours the air: one large soft disc that moves with the progression
   {const ch=started?chordAt(now):null;if(ch){const k=CHORDS.indexOf(ch),bb=barAt(now)-harmBar,x=((bb%LOOPBARS)+LOOPBARS)%LOOPBARS,fr=clamp((x-ch.at)/Math.max(.25,ch.bars)*3,0,1),R=Math.min(W,H)*.62,lv=Math.min(1,bb/6);
     const field=(k,al)=>{k=((k%CHORDS.length)+CHORDS.length)%CHORDS.length;const c=CHORDS[k],x=W*(.18+.64*((c.root*5)%12)/11),y=H*(.3+.4*((c.root*7)%12)/11),col=PAL[c.root%PAL.length];
