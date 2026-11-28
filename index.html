@@ -69,12 +69,12 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
 
 /* the index: section names under the line */
 .secs{position:fixed;z-index:11;left:var(--padX);right:var(--padX);bottom:calc(max(8px,calc(env(safe-area-inset-bottom) - 2px)) - 5px);display:flex;justify-content:space-between;pointer-events:none}
-.secs button{pointer-events:auto;background:none;border:0;margin:0;padding:6px 0 5px;cursor:pointer;font:300 8.5px/9px var(--disp);letter-spacing:.2em;text-transform:uppercase;color:var(--ink);opacity:.42;transition:opacity .35s}
-.secs button:hover{opacity:.8}.secs button.on{opacity:1}
-@media (min-width:761px){.secs button{font-size:9.5px;opacity:.5}}
+.secs button{pointer-events:auto;background:none;border:0;margin:0;padding:6px 0 5px;cursor:pointer;font:400 9.5px/10px var(--disp);letter-spacing:.18em;text-transform:uppercase;color:var(--ink);opacity:.6;transition:opacity .35s}
+.secs button:hover{opacity:.85}.secs button.on{opacity:1}
+@media (min-width:761px) and (orientation:landscape),(min-width:1025px){.secs{position:static;gap:clamp(18px,2.2vw,34px);justify-content:flex-end}.secs button{font-size:10.5px;padding:10px 0}}
 .go{display:none!important}
 /* the one indicator: a white line that fills */
-.prog{position:fixed;z-index:10;left:var(--padX);right:var(--padX);bottom:max(8px,calc(env(safe-area-inset-bottom) - 2px));height:26px;cursor:pointer;touch-action:none}
+.prog{position:fixed;z-index:9;left:var(--padX);right:var(--padX);bottom:max(8px,calc(env(safe-area-inset-bottom) - 2px));height:26px;cursor:pointer;touch-action:none}
 .prog::before,.prog i{content:"";position:absolute;left:0;right:0;top:12px;height:1.5px;border-radius:2px}
 .prog::before{background:rgba(236,233,228,.16)}
 .prog i{display:block;background:var(--ink);transform-origin:left;transform:scaleX(0)}
@@ -95,7 +95,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
 .d-hero .big{font-size:min(4vw,9dvh);white-space:nowrap}
 
 .nudge{position:absolute;z-index:2;right:var(--padX);bottom:calc(var(--padB) + 6px);width:52px;height:52px;border:1px solid rgba(236,233,228,.55);border-radius:50%;display:grid;place-items:center;transition:opacity .6s}
-.nudge.gone{opacity:0}
+.nudge{background:none;color:var(--ink);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nudge::before{content:"Scroll";position:absolute;right:calc(100% + 16px);top:50%;transform:translateY(-50%);font:300 9.5px var(--disp);letter-spacing:.24em;text-transform:uppercase;white-space:nowrap}
+@media (hover:none){.nudge::before{content:"Swipe"}}
+@media (max-width:380px){.nudge::before{right:0;top:auto;bottom:calc(100% + 10px);transform:none}}
+.nudge.gone{opacity:0;pointer-events:none}
 @media (prefers-reduced-motion:no-preference){.nudge svg{animation:nudge 2.2s ease-in-out infinite}}
 @keyframes nudge{0%,100%{transform:translateX(-3px)}50%{transform:translateX(4px)}}
 
@@ -339,7 +343,7 @@ input:focus,textarea:focus{border-color:#4a4744}
 <body>
 <header class="top">
   <a class="mark" href="#open" id="home">Francesco Coia</a>
-  <span class="right"><button class="np" id="np" type="button" aria-label="Pause"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1h2v8H2zM6 1h2v8H6z" fill="currentColor"/></svg><span id="np-t"></span></button><a class="go" href="#contact" id="go-contact">Contact</a></span>
+  <span class="right"><button class="np" id="np" type="button" aria-label="Pause"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1h2v8H2zM6 1h2v8H6z" fill="currentColor"/></svg><span id="np-t"></span></button><nav class="secs" id="secs" aria-label="Sections"><button type="button" data-s="listen">Listen</button><button type="button" data-s="watch">Watch</button><button type="button" data-s="works">Works</button><button type="button" data-s="about">About</button><button type="button" data-s="contact">Contact</button></nav><a class="go" href="#contact" id="go-contact">Contact</a></span>
 </header>
 
 <main id="track" tabindex="0" aria-label="Francesco Coia — drag, scroll or swipe sideways">
@@ -349,7 +353,7 @@ input:focus,textarea:focus{border-color:#4a4744}
       <p class="cap">Composer · Arranger · Orchestrator</p>
       <h1 class="big">Francesco<br>Coia</h1>
     </div>
-    <span class="nudge" id="nudge" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 16 16"><path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1"/></svg></span>
+    <button type="button" class="nudge" id="nudge" aria-label="Go to the music"><svg width="22" height="22" viewBox="0 0 16 16"><path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1"/></svg></button>
   </section>
 
   <section class="door d-listen" id="listen">
@@ -409,7 +413,6 @@ input:focus,textarea:focus{border-color:#4a4744}
 </main>
 
 <div class="prog" id="progbar" aria-hidden="true"><i id="prog"></i></div>
-<nav class="secs" id="secs" aria-label="Sections"><button type="button" data-s="listen">Listen</button><button type="button" data-s="watch">Watch</button><button type="button" data-s="works">Works</button><button type="button" data-s="about">About</button><button type="button" data-s="contact">Contact</button></nav>
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Video"><button type="button" id="lb-x">Close</button><div class="fr" id="lb-fr"></div></div>
 <div class="cur" id="cur" aria-hidden="true">Drag</div>
 <audio id="au" preload="none"></audio>
@@ -418,7 +421,7 @@ input:focus,textarea:focus{border-color:#4a4744}
 {
 const tk=(n,d)=>{try{window.umami&&umami.track(n,d)}catch(e){}};let tkLast=null;
 const AUDIO={"t01": "t01.mp3", "t02": "t02.mp3", "t03": "t03.mp3", "t04": "t04.mp3", "t05": "t05.mp3", "t06": "t06.mp3", "t07": "t07.mp3", "t08": "t08.mp3", "t09": "t09.mp3", "t10": "t10.mp3", "t11": "t11.mp3", "t12": "t12.mp3", "t13": "t13.mp3", "t14": "t14.mp3"};   // track id -> file in audio/
-const TRACKS=[["t04", "Bella ci dormi", "2:40", "Jusqu’au prochain souffle · short film, 2025"], ["t08", "Echoes of the True Self", "1:59", "Murdrum · short film by Job Gailey, 2025"], ["t01", "A Home That No Longer Remembers Us", "2:47", "Unreleased · from a project in development"], ["t05", "Breath Out", "2:22", "Façade · short film by Pratham Mudbidri, 2023"], ["t02", "The Weight of an Invisible Shadow", "4:22", "Luce e Ombra, I · contemporary dance, 2026"], ["t14", "Where the Light Begins to Fracture", "4:33", "Luce e Ombra, IV · contemporary dance, 2026"], ["t03", "Bodies Out of Focus", "2:56", "Luce e Ombra, II · contemporary dance, 2026"], ["t13", "An Architecture of Echoes", "3:44", "Luce e Ombra, III · contemporary dance, 2026"], ["t06", "Everything Returns, Slightly Changed", "4:14", "Luce e Ombra, VI · with Andrea Pagliara"], ["t07", "What Remains Between Us", "4:37", "Luce e Ombra, V · with Andrea Pagliara"], ["t09", "p e r d e r e", "2:29", "Birthday · short film by Imogen Walker, 2023"], ["t10", "On The Ring", "3:00", "Nino Benvenuti · documentary, Rai Storia · with Andrea Pagliara"], ["t11", "Alfredo", "1:30", "Alfredo · short film by Sveva Salimene · with Andrea Pagliara"], ["t12", "Vicini Vicini", "1:11", "Sicilia Express · Netflix series · theme by Paolo Buonvino, arranged"]];
+const TRACKS=[["t04", "Bella ci dormi", "2:39", "Jusqu’au prochain souffle · short film, 2025"], ["t08", "Echoes of the True Self", "1:58", "Murdrum · short film by Job Gailey, 2025"], ["t01", "A Home That No Longer Remembers Us", "2:46", "Unreleased · from a project in development"], ["t05", "Breath Out", "2:20", "Façade · short film by Pratham Mudbidri, 2023"], ["t02", "The Weight of an Invisible Shadow", "4:13", "Luce e Ombra, I · contemporary dance, 2026"], ["t14", "Where the Light Begins to Fracture", "4:25", "Luce e Ombra, IV · contemporary dance, 2026"], ["t03", "Bodies Out of Focus", "2:55", "Luce e Ombra, II · contemporary dance, 2026"], ["t13", "An Architecture of Echoes", "3:35", "Luce e Ombra, III · contemporary dance, 2026"], ["t06", "Everything Returns, Slightly Changed", "4:11", "Luce e Ombra, VI · with Andrea Pagliara"], ["t07", "What Remains Between Us", "4:36", "Luce e Ombra, V · with Andrea Pagliara"], ["t09", "p e r d e r e", "2:26", "Birthday · short film by Imogen Walker, 2023"], ["t10", "On The Ring", "2:57", "Nino Benvenuti · documentary, Rai Storia · with Andrea Pagliara"], ["t11", "Alfredo", "1:30", "Alfredo · short film by Sveva Salimene · with Andrea Pagliara"], ["t12", "Vicini Vicini", "1:10", "Sicilia Express · Netflix series · theme by Paolo Buonvino, arranged"]];
 const WORKS=[["2026", [["Le Cose Non Dette", "Film", "Gabriele Muccino", "Electronic programming, assistant to composer", "le-cose-non-dette.jpg", 0.667], ["Dio Ride", "Film", "Giovanni Veronesi", "Electronic programming, assistant to composer", "dio-ride.jpg", 0.667], ["Bare", "Film", "Lorna Tucker", "Electronic programming, assistant to composer", "bare.jpg", 0.667], ["Starmaker", "Film", "Joshua David Pivato", "Composer", "starmaker.jpg", 0.667], ["Luce e Ombra", "Dance", "Accademia Nazionale di Danza", "Composer", "luce-e-ombra.jpg", 0.667], ["Frida", "Opera musical", "", "Arranger, orchestrator", "frida.jpg", 0.667], ["Rat Poison", "Short", "Mina Kaya", "Composer", "rat-poison.jpg", 0.667]]], ["2025", [["Sicilia Express", "Series", "Netflix", "Arranger, electronic programming, assistant to composer", "sicilia-express.jpg", 0.667], ["Nino Benvenuti", "Documentary", "Rai Storia", "Additional music, guitars", "nino-benvenuti.jpg", 0.667], ["Van Gogh Café", "Opera musical", "", "Arranger, orchestrator", "van-gogh-cafe.jpg", 0.667], ["Alfredo", "Short", "Sveva Salimene", "Composer", "alfredo.jpg", 0.667], ["Murdrum", "Short", "Job Gailey", "Composer", "murdrum.jpg", 0.667], ["Jusqu’au prochain souffle", "Short", "", "Composer", "jusqu-au-prochain-souffle.jpg", 0.667]]], ["2024", [["Il Vajont di Tutti", "Opera musical", "", "Arranger, orchestrator", "il-vajont-di-tutti.jpg", 0.667], ["Cicatrix", "Short", "U. Güven, T. D. Ipek, D. S. Bilgiç", "Composer", "cicatrix.jpg", 0.667], ["The Chitin Hunter", "Short", "Pratham Mudbidri", "Composer", "the-chitin-hunter.jpg", 0.667]]], ["2023", [["Maintenance", "Short", "Pablo Aguilar", "Composer", "maintenance.jpg", 0.667], ["Birthday", "Short", "Imogen Walker", "Composer", "birthday.jpg", 0.667], ["Façade", "Short", "Pratham Mudbidri", "Composer", "facade.jpg", 0.667], ["Bête Noir", "Short", "Jeremy Brondoni", "Composer", "bete-noir.jpg", 0.667], ["Contractors", "Short", "Michael Payne", "Composer", "contractors.jpg", 0.667], ["Burn To Be Reborn", "Short", "Irene Loreti, Carla Mariani", "Composer", "burn-to-be-reborn.jpg", 0.667, "2022"]]]];
 const VIDEOS=[["ab0v_lUS5qM", "Tape Explorations"], ["puJDctlBKIg", "Speculative Memories"], ["xh6746JX6b8", "FUGUE/TRAMPOLINE"], ["PxWVAe1Pt_Q", "A Night Odyssey (Making Of)"]];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -488,7 +491,7 @@ let keep=[0,0],lastRs=0;
 track.addEventListener('scroll',()=>{if(performance.now()-lastRs<400)return;const x=track.scrollLeft+1;let i=0;doors.forEach((d,k)=>{if(d.offsetLeft<=x)i=k});keep=[i,(x-1-doors[i].offsetLeft)/doors[i].offsetWidth]},{passive:true});
 new ResizeObserver(()=>{lastRs=performance.now();stopGlide();const d=doors[keep[0]];track.scrollLeft=d.offsetLeft+keep[1]*d.offsetWidth;target=track.scrollLeft;kick()}).observe(track);
 kick();
-const nudge=document.getElementById('nudge');track.addEventListener('scroll',()=>{if(track.scrollLeft>40)nudge.classList.add('gone')},{passive:true});
+const nudge=document.getElementById('nudge');nudge.addEventListener('click',()=>{stopGlide();goTo(document.getElementById('listen').offsetLeft)});track.addEventListener('scroll',()=>{if(track.scrollLeft>40)nudge.classList.add('gone')},{passive:true});
 function goTo(x){if(pageQ.matches)track.scrollTo({left:x,behavior:still.matches?'instant':'smooth'});else{if(!anim)target=track.scrollLeft;glide(x)}}
 document.getElementById('go-contact').addEventListener('click',e=>{e.preventDefault();goTo(maxX())});
 for(const b of secBtns)b.addEventListener('click',()=>{stopGlide();goTo(Math.min(maxX(),document.getElementById(b.dataset.s).offsetLeft));tk('Index',{section:b.dataset.s})});
