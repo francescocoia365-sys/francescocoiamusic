@@ -286,13 +286,13 @@ function schedule(){
 setInterval(schedule,25);
 
 /* ---- keys: seven shapes, five notes. They move with the harmony, so they are always right ---- */
-const NK=7;let keysA=0,duck=0;const kflash=new Array(NK).fill(0);
-function keyNotes(ch){                                       // the chord's own notes first, then the scale notes that do not rub against them
+const NK=7;let keysA=0,duck=0,keyCount=3,presses=0,turn=0;const kflash=new Array(NK).fill(0),kA=new Array(NK).fill(0);
+function keyNotes(ch,k=keyCount){                           // three notes of the chord to begin with; then the rest of the five, then the octave
   let pcs=ch.pcs.slice(0,5);for(const p of SCALE){if(pcs.length>=5)break;if(pcs.includes(p))continue;if(pcs.some(q=>{const d=(p-q+12)%12;return d===1||d===11}))continue;pcs.push(p)}
-  const o=[];let n=59;while(o.length<NK){n++;if(pcs.includes(n%12))o.push(n)}return o}
-function keyBox(i){const r=Math.min(27,(W-2*22)/NK/2-3),gap=Math.min(r*2+16,(W-44)/NK),x0=W/2-gap*(NK-1)/2;return{x:x0+i*gap,y:H-(padB-KEYBAND)-KEYBAND/2-2,r}}
-function keyAt(x,y){if(keysA<.5)return -1;for(let i=0;i<NK;i++){const k=keyBox(i);if(Math.hypot(x-k.x,y-k.y)<k.r+7)return i}return -1}
-function playKey(i){if(!ac||keysA<.5)return;const ch=chordAt(ac.currentTime+.02)||CHORDS[0],n=keyNotes(ch)[i],k=keyBox(i),col=PAL[i%PAL.length];
+  pcs=pcs.slice(0,Math.min(k,5));const o=[];let n=59;while(o.length<k){n++;if(pcs.includes(n%12))o.push(n)}return o}
+function keyBox(i){const k=Math.max(3,keyCount),r=Math.min(30,(W-44)/k/2-3),gap=Math.min(r*2+18,(W-44)/k),x0=W/2-gap*(k-1)/2;return{x:x0+i*gap,y:H-(padB-KEYBAND)-KEYBAND/2-2,r}}
+function keyAt(x,y){if(keysA<.5)return -1;for(let i=0;i<keyCount;i++){const k=keyBox(i);if(Math.hypot(x-k.x,y-k.y)<k.r+7)return i}return -1}
+function playKey(i){if(!ac||keysA<.5||i>=keyCount)return;const ch=chordAt(ac.currentTime+.02)||CHORDS[0],n=keyNotes(ch)[i],k=keyBox(i),col=PAL[i%PAL.length];
   voice(n,ac.currentTime+.005,.9,{hold:1.6,release:3.2,lp:3400,pan:(i/(NK-1)-.5)*.8,send:1.2});kflash[i]=1;duck=1;
   // what you play stays in the air
   const bx=(k.x/W)*bgc.width,by=(.2+.55*(1-i/(NK-1))+(Math.random()-.5)*.12)*bgc.height,R=bgc.width*(.22+Math.random()*.16),gr=bg.createRadialGradient(bx,by,0,bx,by,R);
@@ -301,6 +301,12 @@ function playKey(i){if(!ac||keysA<.5)return;const ch=chordAt(ac.currentTime+.02)
   let best=null,bd=1e9;for(const c of cells){if(c.dying||c.intro)continue;const d=Math.abs(noteOfIdx(c.base)-n+(noteOfIdx(c.base)<n-12?12:0));if(d<bd){bd=d;best=c}}
   if(best){const pc=n%12;let t=best.base,found=null;for(let d=0;d<=3&&found===null;d++)for(const sgn of [1,-1]){const j=best.base+sgn*d;if(((noteOfIdx(j)%12)+12)%12===pc){found=j;break}}
     if(found!==null&&found!==best.base){best.base=clamp(found,IDX_LOW,IDX_HIGH);best.anchor=noteOfIdx(best.base);applyRules(best)}best.ev='answers';best.evT=performance.now();best.flash[0]=1}
+  // the more you play, the more the lines are made of your notes: from the sixth note on, each one you play replaces a note in a line
+  presses++;const live=cells.filter(c=>!c.dying&&!c.intro&&c!==best);
+  for(let rep=0;rep<(presses>18?2:presses>6?1:0)&&live.length;rep++){const c=live[(turn++)%live.length],st=1+((c.take=(c.take||0)+1)-1)%Math.max(1,c.len-1),pc=n%12,cur=c.base+(c.deg[st]===REST?0:c.deg[st]);
+    let found=null;for(let d=0;d<=4&&found===null;d++)for(const sgn of [1,-1]){const j=cur+sgn*d;if(((noteOfIdx(j)%12)+12)%12===pc){found=j;break}}
+    if(found!==null&&st<c.len){c.deg[st]=clamp(found-c.base,-7,7);c.flash[st]=1;c.ev='takes your note';c.evT=performance.now()}}
+  keyCount=Math.min(NK,3+Math.floor(presses/6));                // a new shape every six notes
   try{window.umami&&!playKey.t&&(playKey.t=1,umami.track('Key played'))}catch(_){}}
 addEventListener('keydown',e=>{const i='asdfghj'.indexOf(e.key.toLowerCase());if(i>=0&&!e.repeat&&!e.metaKey&&!e.ctrlKey)playKey(i)});
 
@@ -352,7 +358,7 @@ function guideStep(){const n=cells.filter(c=>!c.dying).length;return Math.min(GU
 function ghostPts(spec){const [x0,y0,x1,y1,amp]=spec,o=[];for(let i=0;i<=40;i++){const t=i/40;o.push({x:W*(x0+(x1-x0)*t),y:H*(y0+(y1-y0)*t+amp*Math.sin(t*6.283))})}return o}
 function kill(c){if(!c||c.dying)return;c.dying=true;c.dieAt=ac?ac.currentTime-(SWELL_OUT-1)*BAR:0}
 undoB.addEventListener('click',()=>{while(history.length){const id=history.pop(),c=cells.find(x=>x.id===id&&!x.dying);if(c){kill(c);break}}ui()});
-clearB.addEventListener('click',()=>{for(const c of cells)kill(c);history=[];harmBar=-1;drawn=0;keysA=0;bg.clearRect(0,0,bgc.width,bgc.height);pickProg();ui()});
+clearB.addEventListener('click',()=>{for(const c of cells)kill(c);history=[];harmBar=-1;drawn=0;keysA=0;keyCount=3;presses=0;bg.clearRect(0,0,bgc.width,bgc.height);pickProg();ui()});
 addEventListener('keydown',e=>{if(e.key==='z'&&(e.metaKey||e.ctrlKey)){e.preventDefault();undoB.click()}});
 document.addEventListener('visibilitychange',()=>{if(ac&&document.hidden)ac.suspend();});
 
@@ -440,7 +446,7 @@ function frame(){
       const k=Math.min(gp.length-1,Math.floor(ph*gp.length)),p=gp[k];g.globalAlpha=.8*Math.sin(Math.PI*ph);g.fillStyle='#ece9e4';g.beginPath();g.arc(p.x,p.y,4,0,6.283);g.fill()}}
   // the keys
   {const want=started&&harmBar>=0&&barAt(now)-harmBar>=1.5&&cells.filter(c=>!c.dying).length>=BASS_AT-1?1:0;keysA+=(want-keysA)*.04;
-    if(keysA>.02){g.globalCompositeOperation='screen';for(let i=0;i<NK;i++){const k=keyBox(i),f=kflash[i],col=PAL[i%PAL.length],c2=PAL[(i+3)%PAL.length],r=k.r*(1+f*.25),kind=i%4;kflash[i]=f*.9;
+    if(keysA>.02){g.globalCompositeOperation='screen';for(let i=0;i<NK;i++){kA[i]+=((i<keyCount?1:0)-kA[i])*.06;if(kA[i]<.02)continue;const k=keyBox(i),f=kflash[i],col=PAL[i%PAL.length],c2=PAL[(i+3)%PAL.length],r=k.r*(1+f*.25)*(.6+.4*kA[i]),kind=i%4,keysA0=keysA;keysA=keysA0*kA[i];kflash[i]=f*.9;
       g.globalAlpha=.3*keysA;g.fillStyle=rgba(col,1);g.beginPath();g.arc(k.x,k.y,r*1.32,0,6.283);g.fill();
       g.globalAlpha=.95*keysA;g.fillStyle=rgba(col,1);g.beginPath();
       if(kind===0)g.arc(k.x,k.y,r,0,6.283);
@@ -451,7 +457,7 @@ function frame(){
       g.globalCompositeOperation='source-over';g.globalAlpha=.9*keysA;g.fillStyle=rgba(c2,1);g.beginPath();g.arc(k.x+(kind===2?r*.2:0),k.y+(kind===3?-r*.15:0),r*.3,0,6.283);g.fill();
       g.strokeStyle='#ece9e4';g.lineWidth=1;g.globalAlpha=.45*keysA;g.beginPath();g.moveTo(k.x-r*1.2,k.y+r*1.25);g.lineTo(k.x+r*1.2,k.y+r*1.05);g.stroke();
       if(f>.02){g.globalAlpha=.7*f*keysA;g.beginPath();g.arc(k.x,k.y,r*1.3+(1-f)*r*2,0,6.283);g.stroke()}
-      g.globalCompositeOperation='screen'}
+      keysA=keysA0;g.globalCompositeOperation='screen'}
       g.globalCompositeOperation='source-over'}}
   if(cur&&cur.length>1){const sp=smooth(cur),dt=Math.max(1,cur[cur.length-1].t-cur[0].t);let L=0;for(let i=1;i<sp.length;i++)L+=Math.hypot(sp[i].x-sp[i-1].x,sp[i].y-sp[i-1].y);
     g.globalCompositeOperation='screen';brush(sp,bodyOf(sp[0].y,clamp(L/dt/1.1,0,1)),PAL[nextSlot()],.95,0,0,0);g.globalCompositeOperation='source-over'}
