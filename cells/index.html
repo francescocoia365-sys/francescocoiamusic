@@ -28,6 +28,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 .intro h1{font:200 clamp(34px,7.4vw,96px)/.98 var(--disp);letter-spacing:-.02em;text-transform:uppercase}
 .intro small{display:block;margin-bottom:clamp(12px,2vh,20px);font:300 10.5px var(--disp);letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
 .intro p.no{color:var(--ink);opacity:.8}
+#start{pointer-events:auto;margin-top:clamp(22px,3.4vh,34px);padding:15px 26px;border:1px solid rgba(236,233,228,.6);border-radius:999px;background:none;color:var(--ink);font:300 11px var(--disp);letter-spacing:.24em;text-transform:uppercase;cursor:pointer}
+#start.gone{display:none}
 .intro p{margin-top:clamp(16px,2.4vh,26px);max-width:34ch;font-size:clamp(14px,1.25vw,17px);line-height:1.5;color:var(--mute)}
 @media (max-width:760px){.intro{top:calc(env(safe-area-inset-top) + 92px);transform:none}.intro p:not(.no){display:none}.intro p.no{margin-top:14px;font-size:14px}}
 .foot{position:fixed;z-index:10;left:var(--padX);right:var(--padX);bottom:max(14px,env(safe-area-inset-bottom));pointer-events:none}
@@ -45,8 +47,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 <body>
 <canvas id="cv" aria-label="Drawing surface: each line you draw becomes a musical pattern"></canvas>
 <header class="top"><a href="../">Francesco Coia</a><div class="acts"><button type="button" id="undo" hidden>Undo</button><button type="button" id="clear" hidden>Clear</button></div></header>
-<div class="intro" id="intro"><small>Compose with me</small><h1>Draw<br>a line</h1><p>Your line becomes a pattern. Height is pitch, length is how many notes, a quick hand plays more of them. Low notes are large and slow, high ones small and quick; triangles move in threes. At first each line is on its own. At four lines the bass comes in, and little by little they all start to follow the harmony.</p><p class="no">No AI. Nothing here is generated: only rules and chance, shaped by my taste.</p></div>
-<footer class="foot"><p class="guide" id="guide"></p><div class="row"><span><span id="noai">No AI · rules and chance</span> · <span id="ver">v16 · 28.11 15:42</span></span><b><span id="count"></span></b><span id="prog" hidden></span><span id="chord" hidden></span></div><div class="line"><i id="bar"></i></div></footer>
+<div class="intro" id="intro"><small>Compose with me</small><h1>Draw<br>a line</h1><p>Your line becomes a pattern. Height is pitch, length is how many notes, a quick hand plays more of them. Low notes are large and slow, high ones small and quick; triangles move in threes. At first each line is on its own. At four lines the bass comes in, and little by little they all start to follow the harmony.</p><p class="no">No AI. Nothing here is generated: only rules and chance, shaped by my taste.</p><button type="button" id="start">Tap for sound</button></div>
+<footer class="foot"><p class="guide" id="guide"></p><div class="row"><span><span id="noai">No AI · rules and chance</span> · <span id="ver">v17 · 28.11 15:46</span></span><b><span id="count"></span></b><span id="prog" hidden></span><span id="chord" hidden></span></div><div class="line"><i id="bar"></i></div></footer>
 <script>
 /* Cells: the rules of the CELLULE engine in residuo (Generative.h), drawn by hand.
    A line = a cell: a short figure of scale degrees from an anchor note, with its own length and step. */
@@ -204,7 +206,7 @@ function unlock(){                                           // iPhone: sound on
   if(!unlocked){unlocked=true;try{const el=document.createElement('audio');el.setAttribute('playsinline','');el.loop=true;el.volume=.001;
     {const n=8000,b=new Uint8Array(44+n),v=new DataView(b.buffer),w=(o,t)=>{for(let i=0;i<t.length;i++)b[o+i]=t.charCodeAt(i)};w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);b.fill(128,44);el.src=URL.createObjectURL(new Blob([b],{type:'audio/wav'}))}const p=el.play();if(p&&p.catch)p.catch(()=>{unlocked=false})}catch(_){unlocked=false}}
   if(ac){if(ac.state!=='running')ac.resume();try{const b=ac.createBuffer(1,1,ac.sampleRate),src=ac.createBufferSource();src.buffer=b;src.connect(ac.destination);src.start(0)}catch(_){}}}
-for(const ev of ['touchend','pointerup','click','keydown'])addEventListener(ev,()=>{audio();unlock()},{passive:true});
+for(const ev of ['touchend','pointerup','click','keydown'])addEventListener(ev,()=>{if(ready){audio();unlock()}},{passive:true});
 function audio(){
   if(ac){if(ac.state!=='running')ac.resume();return}
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
@@ -234,7 +236,7 @@ function voice(note,when,gainv,opt={}){                      // one piano note; 
   node.connect(out);if(opt.send!==0){const sd=ac.createGain();sd.gain.value=opt.send===undefined?1:opt.send;node.connect(sd).connect(wet)}
   if(k!==null)src.start(when,opt.offset||0);else src.start(when);src.stop(when+atk+hold+rel+.1);
 }
-const pluck=(note,when,vel,dur,pan,dark=0)=>voice(note,when,PLUCK*1.2*vel,{attack:.05,offset:.04,hold:Math.max(.7,dur*1.8),release:3.2,lp:(380+700*vel)*(1-.4*dark),soft:true,pan});   // the patterns: no hammer, a closed, felted tone
+const pluck=(note,when,vel,dur,pan,dark=0)=>voice(note,when,PLUCK*vel,{attack:.014,hold:Math.max(.6,dur*1.7),release:3,lp:(650+1700*vel)*(1-.4*dark),pan});   // the touch of v14, darker once the keys are there
 function bass(ch,when,dur,lv){                               // a sub: a pure tone an octave under the lines, with a breath of its octave so small speakers hint at it
   const n=24+ch.bass+(ch.bass<4?12:0);                       // E1 .. Eb2, 41 to 78 Hz
   for(const [note,g0,type] of [[n,.075,'sine'],[n+12,.02,'sine']]){
@@ -326,8 +328,12 @@ addEventListener('keydown',e=>{const i='asdfghj'.indexOf(e.key.toLowerCase());if
 let cur=null,bgT=0,nowF=0;const intro=document.getElementById('intro'),undoB=document.getElementById('undo'),clearB=document.getElementById('clear'),countEl=document.getElementById('count'),progEl=document.getElementById('prog'),chordEl=document.getElementById('chord'),barEl=document.getElementById('bar');
 const noaiEl=document.getElementById('noai');setInterval(()=>{const t=started&&ac&&ac.state!=='running'?'Tap once for sound':'No AI · rules and chance';if(noaiEl.textContent!==t)noaiEl.textContent=t},400);
 function ui(){const n=cells.filter(c=>!c.dying).length;undoB.hidden=clearB.hidden=n===0;countEl.textContent=n?`${n}/${MAXCELLS}`:''}
-cv.addEventListener('pointerdown',e=>{const ki=keyAt(e.clientX,e.clientY);if(ki>=0){playKey(ki);return}cv.setPointerCapture(e.pointerId);cur=[{x:e.clientX,y:e.clientY,t:performance.now()}]});
+let ready=false;const startB=document.getElementById('start');
+function begin(){if(ready)return;audio();unlock();ready=true;startB.classList.add('gone');if(ac)voice(72,ac.currentTime+.05,.5,{attack:.02,hold:.8,release:2.4,lp:2200});try{window.umami&&umami.track('Sound on')}catch(_){}}
+startB.addEventListener('click',begin);
+cv.addEventListener('pointerdown',e=>{if(!ready)return;const ki=keyAt(e.clientX,e.clientY);if(ki>=0){playKey(ki);return}cv.setPointerCapture(e.pointerId);cur=[{x:e.clientX,y:e.clientY,t:performance.now()}]});
 cv.addEventListener('pointermove',e=>{if(!cur)return;const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];for(const m of evs.length?evs:[e]){const l=cur[cur.length-1];if(Math.hypot(m.clientX-l.x,m.clientY-l.y)>2.5)cur.push({x:m.clientX,y:m.clientY,t:performance.now()})}});
+cv.addEventListener('click',()=>{if(!ready)begin()});
 function end(){if(!cur)return;const pts=cur;cur=null;audio();unlock();
   let L=0;for(let i=1;i<pts.length;i++)L+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
   if(L<26)return;                                                    // a tap is not a line
@@ -448,12 +454,12 @@ function frame(){
   g.globalCompositeOperation='source-over';
   {const st=guideStep(),reading=cells.some(c=>c.intro),gd=reading?['Your line, written down: each point becomes a note. Then it begins, slowly',null]:GUIDE[st];if(guideEl.textContent!==gd[0])guideEl.textContent=gd[0];
     // on a phone, before anything is drawn: a marked space, so it is clear where the finger goes
-    const ph0=phoneQ.matches&&drawn===0;zoneA+=((ph0&&!cur?1:0)-zoneA)*.08;let zgp=null;
+    const ph0=ready&&phoneQ.matches&&drawn===0;zoneA+=((ph0&&!cur?1:0)-zoneA)*.08;let zgp=null;
     if(phoneQ.matches&&zoneA>.02){const z=zone(),L=20;g.strokeStyle='#ece9e4';g.lineWidth=1.2;g.globalAlpha=.55*zoneA;g.beginPath();
       for(const [cx,cy,dx,dy] of [[z.x,z.y,1,1],[z.x+z.w,z.y,-1,1],[z.x,z.y+z.h,1,-1],[z.x+z.w,z.y+z.h,-1,-1]]){g.moveTo(cx+dx*L,cy);g.lineTo(cx,cy);g.lineTo(cx,cy+dy*L)}g.stroke();
       g.globalAlpha=.6*zoneA;g.fillStyle='#ece9e4';g.font='300 9.5px Unbounded,system-ui,sans-serif';g.textAlign='center';g.fillText('D R A W   H E R E   W I T H   Y O U R   F I N G E R',z.x+z.w/2,z.y+z.h-16);g.textAlign='start';
       if(ph0){zgp=[];for(let i=0;i<=40;i++){const t=i/40;zgp.push({x:z.x+z.w*(.1+.8*t),y:z.y+z.h*(.46-.1*t+.16*Math.sin(t*6.283))})}}}
-    if((zgp||gd[1])&&!cur){const gp=zgp||ghostPts(gd[1]),ph=(performance.now()/2600)%1;g.globalAlpha=.3;g.strokeStyle='#ece9e4';g.lineWidth=1.2;g.setLineDash([2,9]);path(gp);g.stroke();g.setLineDash([]);
+    if(ready&&(zgp||gd[1])&&!cur){const gp=zgp||ghostPts(gd[1]),ph=(performance.now()/2600)%1;g.globalAlpha=.3;g.strokeStyle='#ece9e4';g.lineWidth=1.2;g.setLineDash([2,9]);path(gp);g.stroke();g.setLineDash([]);
       const k=Math.min(gp.length-1,Math.floor(ph*gp.length)),p=gp[k];g.globalAlpha=.8*Math.sin(Math.PI*ph);g.fillStyle='#ece9e4';g.beginPath();g.arc(p.x,p.y,4,0,6.283);g.fill()}}
   // the keys
   {const want=started&&harmBar>=0&&barAt(now)-harmBar>=1.5&&cells.filter(c=>!c.dying).length>=BASS_AT-1?1:0;keysA+=(want-keysA)*.04;
