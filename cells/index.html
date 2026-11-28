@@ -33,6 +33,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 .intro p{margin-top:clamp(16px,2.4vh,26px);max-width:34ch;font-size:clamp(14px,1.25vw,17px);line-height:1.5;color:var(--mute)}
 @media (max-width:760px){.intro{top:calc(env(safe-area-inset-top) + 92px);transform:none}.intro p:not(.no){display:none}.intro p.no{margin-top:14px;font-size:14px}}
 .foot{position:fixed;z-index:10;left:var(--padX);right:var(--padX);bottom:max(14px,env(safe-area-inset-bottom));pointer-events:none}
+.foot{transition:opacity .8s}.foot.gone{opacity:0}
 .foot .guide,.foot .line{display:none}
 .foot .row{margin-bottom:0!important}
 .foot .guide{margin-bottom:10px;font-size:clamp(14px,1.2vw,16px);line-height:1.35;color:var(--ink);max-width:40ch;min-height:1.35em}
@@ -48,7 +49,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 <canvas id="cv" aria-label="Drawing surface: each line you draw becomes a musical pattern"></canvas>
 <header class="top"><a href="../">Francesco Coia</a><div class="acts"><button type="button" id="undo" hidden>Undo</button><button type="button" id="clear" hidden>Clear</button></div></header>
 <div class="intro" id="intro"><small>Compose with me</small><h1>Draw<br>a line</h1><p>Your line becomes a pattern. Height is pitch, length is how many notes, a quick hand plays more of them. Low notes are large and slow, high ones small and quick; triangles move in threes. At first each line is on its own. At four lines the bass comes in, and little by little they all start to follow the harmony.</p><p class="no">No AI. Nothing here is generated: only rules and chance, shaped by my taste.</p><button type="button" id="start">Tap for sound</button></div>
-<footer class="foot"><p class="guide" id="guide"></p><div class="row"><span><span id="noai">No AI · rules and chance</span> · <span id="ver">v17 · 28.11 15:46</span></span><b><span id="count"></span></b><span id="prog" hidden></span><span id="chord" hidden></span></div><div class="line"><i id="bar"></i></div></footer>
+<footer class="foot"><p class="guide" id="guide"></p><div class="row"><span><span id="noai">No AI · rules and chance</span> · <span id="ver">v18 · 28.11 15:49</span></span><b><span id="count"></span></b><span id="prog" hidden></span><span id="chord" hidden></span></div><div class="line"><i id="bar"></i></div></footer>
 <script>
 /* Cells: the rules of the CELLULE engine in residuo (Generative.h), drawn by hand.
    A line = a cell: a short figure of scale degrees from an anchor note, with its own length and step. */
@@ -339,7 +340,7 @@ function end(){if(!cur)return;const pts=cur;cur=null;audio();unlock();
   if(L<26)return;                                                    // a tap is not a line
   const alive=cells.filter(c=>!c.dying);
   if(alive.length>=MAXCELLS&&ac){const old=alive[0];old.dying=true;old.dieAt=ac.currentTime}   // the oldest leaves, slowly
-  const c=cellFromStroke(smooth(pts));if(drawn===0){c.activeLen=c.len;c.intro=staffFor(c)}cells.push(c);history.push(c.id);drawn++;intro.classList.add('gone');ui();
+  const c=cellFromStroke(smooth(pts));if(drawn===0){c.activeLen=c.len;c.intro=staffFor(c)}cells.push(c);history.push(c.id);drawn++;intro.classList.add('gone');document.querySelector('.foot').classList.add('gone');ui();
   try{window.umami&&umami.track('Cell drawn',{cells:cells.filter(c=>!c.dying).length})}catch(_){}}
 cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
 function staffFor(c){                                        // one staff, where the line is: treble if it lives above middle C, bass below
@@ -375,7 +376,7 @@ function guideStep(){const n=cells.filter(c=>!c.dying).length;return Math.min(GU
 function ghostPts(spec){const [x0,y0,x1,y1,amp]=spec,o=[];for(let i=0;i<=40;i++){const t=i/40;o.push({x:W*(x0+(x1-x0)*t),y:H*(y0+(y1-y0)*t+amp*Math.sin(t*6.283))})}return o}
 function kill(c){if(!c||c.dying)return;c.dying=true;c.dieAt=ac?ac.currentTime-(SWELL_OUT-1)*BAR:0}
 undoB.addEventListener('click',()=>{while(history.length){const id=history.pop(),c=cells.find(x=>x.id===id&&!x.dying);if(c){kill(c);break}}ui()});
-clearB.addEventListener('click',()=>{for(const c of cells)kill(c);history=[];harmBar=-1;drawn=0;keysA=0;keyCount=3;presses=0;bg.clearRect(0,0,bgc.width,bgc.height);pickProg();ui()});
+clearB.addEventListener('click',()=>{for(const c of cells)kill(c);history=[];harmBar=-1;drawn=0;document.querySelector('.foot').classList.remove('gone');keysA=0;keyCount=3;presses=0;bg.clearRect(0,0,bgc.width,bgc.height);pickProg();ui()});
 addEventListener('keydown',e=>{if(e.key==='z'&&(e.metaKey||e.ctrlKey)){e.preventDefault();undoB.click()}});
 document.addEventListener('visibilitychange',()=>{if(ac&&document.hidden)ac.suspend();});
 
