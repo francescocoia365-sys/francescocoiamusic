@@ -67,6 +67,12 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
 .np span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .np svg{flex:none;width:9px;height:9px}
 
+/* the index: section names under the line */
+.secs{position:fixed;z-index:11;left:var(--padX);right:var(--padX);bottom:calc(max(8px,calc(env(safe-area-inset-bottom) - 2px)) - 5px);display:flex;justify-content:space-between;pointer-events:none}
+.secs button{pointer-events:auto;background:none;border:0;margin:0;padding:6px 0 5px;cursor:pointer;font:300 8.5px/9px var(--disp);letter-spacing:.2em;text-transform:uppercase;color:var(--ink);opacity:.42;transition:opacity .35s}
+.secs button:hover{opacity:.8}.secs button.on{opacity:1}
+@media (min-width:761px){.secs button{font-size:9.5px;opacity:.5}}
+.go{display:none!important}
 /* the one indicator: a white line that fills */
 .prog{position:fixed;z-index:10;left:var(--padX);right:var(--padX);bottom:max(8px,calc(env(safe-area-inset-bottom) - 2px));height:26px;cursor:pointer;touch-action:none}
 .prog::before,.prog i{content:"";position:absolute;left:0;right:0;top:12px;height:1.5px;border-radius:2px}
@@ -403,6 +409,7 @@ input:focus,textarea:focus{border-color:#4a4744}
 </main>
 
 <div class="prog" id="progbar" aria-hidden="true"><i id="prog"></i></div>
+<nav class="secs" id="secs" aria-label="Sections"><button type="button" data-s="listen">Listen</button><button type="button" data-s="watch">Watch</button><button type="button" data-s="works">Works</button><button type="button" data-s="about">About</button><button type="button" data-s="contact">Contact</button></nav>
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Video"><button type="button" id="lb-x">Close</button><div class="fr" id="lb-fr"></div></div>
 <div class="cur" id="cur" aria-hidden="true">Drag</div>
 <audio id="au" preload="none"></audio>
@@ -458,8 +465,10 @@ document.getElementById('lb-x').addEventListener('click',closeLb);lb.addEventLis
 // ---------- the track ----------
 const track=document.getElementById('track'),doors=[...track.querySelectorAll('.door')],prog=document.getElementById('prog');
 const maxX=()=>Math.max(1,track.scrollWidth-track.clientWidth);
+const secBtns=[...document.querySelectorAll('#secs button')];
 let target=0,anim=0,queued=false;
 function paint(){queued=false;const x=track.scrollLeft,W=innerWidth,mid=W/2,pm=pageQ.matches,reach=pm?W*.8:W*.6;prog.style.transform=`scaleX(${Math.max(0,Math.min(1,x/maxX()))})`;
+  {let cur=null;const mx=maxX();for(const b of secBtns){const el=document.getElementById(b.dataset.s);if(Math.min(mx,el.offsetLeft)-W*.45<=x)cur=b}for(const b of secBtns)b.classList.toggle('on',b===cur)}
   for(const c of cards){const r=c.getBoundingClientRect();if(r.right<-300||r.left>W+300)continue;const f=Math.max(0,1-Math.abs(r.left+r.width/2-mid)/reach);c.style.setProperty('--f',(pm?f*f:Math.min(1,f*2.4)).toFixed(3))}}
 const kick=()=>{if(!queued){queued=true;requestAnimationFrame(paint)}};
 track.addEventListener('scroll',kick,{passive:true});
@@ -482,6 +491,7 @@ kick();
 const nudge=document.getElementById('nudge');track.addEventListener('scroll',()=>{if(track.scrollLeft>40)nudge.classList.add('gone')},{passive:true});
 function goTo(x){if(pageQ.matches)track.scrollTo({left:x,behavior:still.matches?'instant':'smooth'});else{if(!anim)target=track.scrollLeft;glide(x)}}
 document.getElementById('go-contact').addEventListener('click',e=>{e.preventDefault();goTo(maxX())});
+for(const b of secBtns)b.addEventListener('click',()=>{stopGlide();goTo(Math.min(maxX(),document.getElementById(b.dataset.s).offsetLeft));tk('Index',{section:b.dataset.s})});
 const pb=document.getElementById('progbar');let pdrag=false;const seek=e=>{const r=pb.getBoundingClientRect();const x=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*maxX();if(pageQ.matches)track.scrollTo({left:x,behavior:'instant'});else{stopGlide();track.scrollLeft=x;target=x}};
 pb.addEventListener('pointerdown',e=>{pdrag=true;pb.setPointerCapture(e.pointerId);if(pageQ.matches)track.style.scrollSnapType='none';seek(e)});pb.addEventListener('pointermove',e=>{if(pdrag)seek(e)});const pend=()=>{if(!pdrag)return;pdrag=false;track.style.scrollSnapType=''};pb.addEventListener('pointerup',pend);pb.addEventListener('pointercancel',pend);
 document.getElementById('copy').addEventListener('click',async e=>{tk('Copy mail');try{await navigator.clipboard.writeText('francescocoia365@gmail.com');e.target.textContent='Copied'}catch(_){e.target.textContent='Select it'}});
